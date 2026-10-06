@@ -2,6 +2,8 @@
 
 [Español](README.es.md)
 
+![A phone used as a gamepad in front of a laptop running a football game](docs/cover.jpg)
+
 Phone Joystick turns your phone into a joystick for your laptop. It's meant for when you're away from your setup: at the office, in a hotel room, on vacation. Scan a QR code with your phone and play. The phone shows a stick and buttons in its browser, and the computer turns each touch into a key press, so any game you play with the keyboard works. I built it to play [PES 6 Web](https://pes6.optijuegos.net/) in my laptop's browser at work, and the PlayStation layout uses the keys I set up in that game.
 
 - iPhone (Safari) and Android (Chrome). Nothing to install on the phone; you scan a QR code.

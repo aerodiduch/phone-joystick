@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-Phone Joystick convierte tu teléfono en un control para jugar en la computadora. El teléfono muestra un stick y botones en el navegador, y la computadora convierte cada toque en una tecla, así que anda con cualquier juego que se juegue con teclado. Lo hice para jugar un juego de fútbol en el navegador de mi laptop, con el teléfono como joystick.
+Phone Joystick convierte tu teléfono en un joystick para tu notebook. Está pensado para cuando no tenés tu setup a mano: en la oficina, en un hotel, de vacaciones. Escaneás un código QR con el teléfono y jugás. El teléfono muestra un stick y botones en el navegador, y la computadora convierte cada toque en una tecla, así que anda con cualquier juego que se juegue con teclado. Lo hice para jugar un juego de fútbol en el navegador de la notebook, en el trabajo.
 
 - iPhone (Safari) y Android (Chrome). En el teléfono no se instala nada; se escanea un código QR.
 - Windows y macOS.

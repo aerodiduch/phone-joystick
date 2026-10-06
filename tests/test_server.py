@@ -30,10 +30,12 @@ async def client(aiohttp_client, keyboard, state_path):
     return await aiohttp_client(app)
 
 
+HOLD = 0.3  # minimum hold for these tests: long enough that a slow CI machine can't blur it
+
+
 @pytest.fixture
 async def held_client(aiohttp_client, keyboard, state_path):
-    """Same server with the real minimum hold time."""
-    app = server.create_app(keyboard, LAYOUTS, "arrows", TOKEN, state_path=state_path, timeout=5)
+    app = server.create_app(keyboard, LAYOUTS, "arrows", TOKEN, state_path=state_path, timeout=5, min_hold=HOLD)
     return await aiohttp_client(app)
 
 
@@ -239,9 +241,9 @@ async def test_quick_tap_stays_down_for_the_minimum_hold(held_client, keyboard):
     # Press and release arrive together, as when Wi-Fi bunches them.
     await ws.send_json({"type": "state", "pressed": ["a"]})
     await ws.send_json({"type": "state", "pressed": []})
-    await asyncio.sleep(0.02)
+    await asyncio.sleep(HOLD / 3)
     assert take(keyboard) == [("down", "space")]
-    await asyncio.sleep(server.MIN_HOLD)
+    await asyncio.sleep(HOLD)
     assert take(keyboard) == [("up", "space")]
     await ws.close()
 
@@ -250,10 +252,10 @@ async def test_repress_during_the_minimum_hold_keeps_the_key_down(held_client, k
     ws, _ = await connect(held_client)
     for pressed in (["a"], [], ["a"]):
         await ws.send_json({"type": "state", "pressed": pressed})
-    await asyncio.sleep(server.MIN_HOLD * 2)
+    await asyncio.sleep(HOLD * 1.5)
     assert take(keyboard) == [("down", "space")]  # one press, never released in between
-    await press(ws)
-    await asyncio.sleep(server.MIN_HOLD)
+    await ws.send_json({"type": "state", "pressed": []})
+    await asyncio.sleep(HOLD / 3)
     assert take(keyboard) == [("up", "space")]
     await ws.close()
 
@@ -261,10 +263,10 @@ async def test_repress_during_the_minimum_hold_keeps_the_key_down(held_client, k
 async def test_long_press_is_not_delayed(held_client, keyboard):
     ws, _ = await connect(held_client)
     await press(ws, "a")
-    await asyncio.sleep(server.MIN_HOLD)
+    await asyncio.sleep(HOLD)
     take(keyboard)
     await ws.send_json({"type": "state", "pressed": []})
-    await asyncio.sleep(0.01)
+    await asyncio.sleep(HOLD / 3)
     assert take(keyboard) == [("up", "space")]
     await ws.close()
 
@@ -274,10 +276,10 @@ async def test_shift_still_comes_up_last_when_a_release_is_delayed(held_client, 
     await ws.send_json({"type": "layout", "name": "wasd"})
     await ws.receive_json()
     await press(ws, "b")              # shift, held for a while
-    await asyncio.sleep(server.MIN_HOLD)
+    await asyncio.sleep(HOLD)
     await ws.send_json({"type": "state", "pressed": ["a", "b"]})
     await ws.send_json({"type": "state", "pressed": []})  # quick tap on space, then let go of both
-    await asyncio.sleep(server.MIN_HOLD * 2)
+    await asyncio.sleep(HOLD * 1.5)
     assert take(keyboard) == [("down", "shift"), ("down", "space"), ("up", "space"), ("up", "shift")]
     await ws.close()
 

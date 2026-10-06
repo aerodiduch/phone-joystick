@@ -1,0 +1,271 @@
+:root {
+  --bg: #101216;
+  --surface: #1b1e24;
+  --border: #2c313a;
+  --text: #eceef1;
+  --muted: #a3a9b2;
+  --ok: #34c759;
+  --off: #ff453a;
+  --sprint: #5ac8fa;
+  --a: #3ccf6e;
+  --b: #ff5f57;
+  --x: #4c93ff;
+  --y: #ffc531;
+}
+
+/* PlayStation symbol colors: ✕ blue, ○ red, □ pink, △ green. */
+body[data-style="playstation"] {
+  --a: #7aa7ff;
+  --b: #ff6b6b;
+  --x: #ea8fd8;
+  --y: #5fd6a8;
+}
+
+* {
+  box-sizing: border-box;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.2 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--off);
+}
+
+.status[data-state="on"] .dot { background: var(--ok); }
+
+.layouts {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.layouts button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.layouts button[aria-checked="true"] {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.pad {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.stick-zone {
+  position: relative;
+  min-width: 0;
+}
+
+.stick-hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border: 2px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  transition: opacity 0.1s;
+}
+
+.stick-zone.active .stick-hint { opacity: 0; }
+
+/* Sprinting (finger past the ring): the knob and R1 turn light blue. */
+.stick-zone.sprint .front { background: var(--sprint) !important; }
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.face {
+  --s: min(76px, 22vh, 13vw);
+  display: grid;
+  grid-template-columns: repeat(3, var(--s));
+  grid-template-rows: repeat(3, var(--s));
+  gap: calc(var(--s) * 0.12);
+}
+
+.btn {
+  --c: var(--a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid color-mix(in srgb, var(--c) 60%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 18%, var(--surface));
+  color: var(--c);
+  transition: transform 0.05s;
+}
+
+.btn .name {
+  font-size: calc(var(--s) * 0.34);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.btn .key,
+.shoulder .key,
+.pill .key {
+  max-width: 88%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.btn .key {
+  margin-top: 3px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.btn.y { --c: var(--y); grid-area: 1 / 2; }
+.btn.x { --c: var(--x); grid-area: 2 / 1; }
+.btn.b { --c: var(--b); grid-area: 2 / 3; }
+.btn.a { --c: var(--a); grid-area: 3 / 2; }
+
+.btn.pressed {
+  background: var(--c);
+  color: var(--bg);
+  transform: scale(0.94);
+}
+
+.btn.pressed .key { color: var(--bg); opacity: 1; }
+
+/* Shoulders in the top corners; R1 is bigger because it's held to sprint. */
+.shoulder,
+.pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+}
+
+.shoulder {
+  position: absolute;
+  top: 6px;
+  width: 76px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 16px;
+}
+
+.shoulder.l1 { left: 16px; }
+.shoulder.r1 { right: 16px; width: 104px; height: 56px; font-size: 18px; }
+
+.system {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  display: flex;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.pill {
+  min-width: 64px;
+  min-height: 40px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.shoulder .key,
+.pill .key { color: var(--muted); }
+
+.pill .key { max-width: none; }
+
+.shoulder.pressed,
+.pill.pressed {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.shoulder.pressed .key,
+.pill.pressed .key { color: var(--bg); }
+
+.shoulder.auto:not(.pressed) {
+  border-color: var(--sprint);
+  background: var(--sprint);
+  color: var(--bg);
+}
+
+.shoulder.auto:not(.pressed) .key { color: var(--bg); }
+
+@media (max-width: 480px) {
+  .status-text { display: none; }
+}

@@ -1,0 +1,33 @@
+{
+  "default": "arrows",
+  "layouts": {
+    "arrows": {
+      "label": "Arrows",
+      "keys": {
+        "up": "up", "down": "down", "left": "left", "right": "right",
+        "a": "space", "b": "z", "x": "x", "y": "c",
+        "start": "enter", "select": "escape"
+      }
+    },
+    "wasd": {
+      "label": "WASD",
+      "keys": {
+        "up": "w", "down": "s", "left": "a", "right": "d",
+        "a": "space", "b": "shift", "x": "e", "y": "q",
+        "start": "enter", "select": "escape"
+      }
+    },
+    "playstation": {
+      "label": "PlayStation",
+      "style": "playstation",
+      "stickSprint": "r1",
+      "names": { "a": "✕", "b": "○", "x": "□", "y": "△" },
+      "keys": {
+        "up": "up", "down": "down", "left": "left", "right": "right",
+        "a": "x", "b": "d", "x": "a", "y": "w",
+        "l1": "q", "r1": "e",
+        "start": "space", "select": "backspace"
+      }
+    }
+  }
+}

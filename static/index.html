@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Joystick">
+  <meta name="theme-color" content="#101216">
+  <title>Joystick</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="status" id="status" data-state="off">
+      <span class="dot"></span><span class="status-text" id="status-text"></span>
+    </div>
+    <div class="layouts" id="layouts" role="radiogroup"></div>
+  </header>
+  <main class="pad">
+    <section class="stick-zone" id="stick-zone"><div class="stick-hint"></div></section>
+    <section class="buttons">
+      <div class="face">
+        <button class="btn y" data-control="y"><span class="name">Y</span><span class="key"></span></button>
+        <button class="btn x" data-control="x"><span class="name">X</span><span class="key"></span></button>
+        <button class="btn b" data-control="b"><span class="name">B</span><span class="key"></span></button>
+        <button class="btn a" data-control="a"><span class="name">A</span><span class="key"></span></button>
+      </div>
+    </section>
+    <button class="shoulder l1" data-control="l1" hidden><span class="name">L1</span><span class="key"></span></button>
+    <button class="shoulder r1" data-control="r1" hidden><span class="name">R1</span><span class="key"></span></button>
+    <div class="system">
+      <button class="pill" data-control="select"><span class="name">Select</span><span class="key"></span></button>
+      <button class="pill" data-control="start"><span class="name">Start</span><span class="key"></span></button>
+    </div>
+  </main>
+  <script src="/static/vendor/nipplejs-1.0.4.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

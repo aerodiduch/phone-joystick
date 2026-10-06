@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync
+      - run: uv run playwright install chromium
+      - run: uv run pytest -q
+      - name: Real key presses (Windows runner, nobody at the keyboard)
+        if: runner.os == 'Windows'
+        run: uv run python tests/check_real_keys.py
+
+  windows-exe:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync
+      - name: Build
+        run: uv run pyinstaller --onefile --name phone-joystick --add-data "static;static" --add-data "layouts.json;." server.py
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $server = Start-Process dist\phone-joystick.exe -ArgumentList "--dry-run" -PassThru -RedirectStandardOutput out.txt -RedirectStandardError err.txt
+          Start-Sleep -Seconds 8
+          $page = Invoke-WebRequest http://127.0.0.1:8777/ -UseBasicParsing
+          Stop-Process $server.Id
+          Get-Content out.txt, err.txt
+          if ($page.StatusCode -ne 200 -or $page.Content -notmatch "nipplejs") { exit 1 }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: phone-joystick-windows
+          path: dist/phone-joystick.exe
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/phone-joystick.exe

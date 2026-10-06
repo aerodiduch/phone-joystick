@@ -51,7 +51,7 @@ log = logging.getLogger("joystick")
 
 
 def load_layouts(path: Path) -> tuple[dict, str]:
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     layouts = data["layouts"]
     # A layout maps any subset of CONTROLS; the phone hides the controls it leaves out.
     for name, layout in layouts.items():
@@ -68,13 +68,13 @@ def load_layouts(path: Path) -> tuple[dict, str]:
 
 def load_state(path: Path) -> dict:
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, ValueError):
         return {}
 
 
 def save_state(path: Path, state: dict) -> None:
-    path.write_text(json.dumps(state, indent=2) + "\n")
+    path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
 
 
 @dataclass

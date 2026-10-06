@@ -157,7 +157,7 @@ async def check_full_chain(p, page, kb) -> list[str]:
         got = [(e["type"], e["code"]) for e in await events(page) if not e["repeat"]]
         want = [("keydown", "ArrowUp"), ("keydown", "Space"), ("keyup", "ArrowUp"), ("keyup", "Space")]
         if sorted(got[:2]) != sorted(want[:2]) or sorted(got[2:]) != sorted(want[2:]):
-            failures.append(f"phone → Mac: got {got}, want {want}")
+            failures.append(f"phone -> keys: got {got}, want {want}")
         if app[server.HUB].held:
             failures.append(f"keys still held: {app[server.HUB].held}")
     finally:
@@ -183,7 +183,7 @@ async def main() -> int:
             failures = await check_keycodes(page, kb)
             print(f"keycodes: {len(SUPPORTED_KEYS)} keys + shift combo, {len(failures)} failures")
             chain = await check_full_chain(p, page, kb)
-            print(f"full chain phone → server → Mac: {'OK' if not chain else 'FAIL'}")
+            print(f"full chain phone -> server -> keys: {'OK' if not chain else 'FAIL'}")
             failures += chain
         finally:
             for key in SUPPORTED_KEYS:  # nothing stays down, whatever happened

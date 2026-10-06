@@ -152,7 +152,7 @@ async def test_layout_switch_while_holding(client, keyboard, state_path):
     assert config["layout"] == "wasd"
     assert config["keys"]["b"] == "shift"
     assert take(keyboard) == [("up", "up"), ("down", "w")]
-    assert json.loads(state_path.read_text())["layout"] == "wasd"
+    assert json.loads(state_path.read_text(encoding="utf-8"))["layout"] == "wasd"
     await ws.close()
 
 

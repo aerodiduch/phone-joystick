@@ -51,11 +51,13 @@ async def browser():
         await b.close()
 
 
-async def open_phone(browser, url, size, locale="es-AR"):
+async def open_phone(browser, url, size, locale="es-AR", left="analog"):
     ctx = await browser.new_context(
         viewport={"width": size[0], "height": size[1]}, device_scale_factor=3,
         is_mobile=True, has_touch=True, locale=locale,
     )
+    if left:  # the page starts on the d-pad unless the phone remembers otherwise
+        await ctx.add_init_script(f"localStorage.setItem('pj.leftControl', '{left}')")
     page = await ctx.new_page()
     await page.goto(url)
     await page.wait_for_function("document.getElementById('status').dataset.state === 'on'")
@@ -145,9 +147,11 @@ async def test_leaving_the_page_releases_keys(browser, base_url, keyboard):
 
 
 async def choose_layout(page, label):
+    if await page.locator("#layouts.compact").count():  # narrow screens fold the profiles into a list
+        await page.locator("#layouts button").tap()
     await page.get_by_role("radio", name=label).tap()
     await page.wait_for_function(
-        f"[...document.querySelectorAll('#layouts button')].some(b => b.textContent === {label!r} "
+        f"[...document.querySelectorAll('#layouts button, #sheet-list button')].some(b => b.textContent === {label!r} "
         "&& b.getAttribute('aria-checked') === 'true')")
 
 
@@ -237,12 +241,12 @@ async def test_reloads_when_the_server_changes(browser, base_url, app, monkeypat
 @pytest.mark.parametrize("layout", ["Flechas", "PlayStation"])
 @pytest.mark.parametrize("name", list(VIEWPORTS))
 async def test_layout_fits(browser, base_url, name, layout):
-    page, _ = await open_phone(browser, base_url, VIEWPORTS[name])
+    page, _ = await open_phone(browser, base_url, VIEWPORTS[name], left=None)  # the default d-pad
     await choose_layout(page, layout)
     SHOTS.mkdir(exist_ok=True)
     await page.screenshot(path=SHOTS / f"{name}-{layout.lower()}.png")
     width, height = VIEWPORTS[name]
-    selectors = [".status", "#layouts", ".btn.a", ".btn.b", ".btn.x", ".btn.y",
+    selectors = [".status", "#layouts", "#mode", "#dpad", ".btn.a", ".btn.b", ".btn.x", ".btn.y",
                  '[data-control="select"]', '[data-control="start"]', ".shoulder.l1", ".shoulder.r1"]
     boxes = {}
     for sel in selectors:
@@ -330,3 +334,45 @@ async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, ap
     await touch(cdp, "touchEnd", {})
     assert await page.evaluate(count) == 1
     assert await page.evaluate("document.documentElement.scrollWidth") <= 852
+
+
+async def test_dpad_is_the_default_and_the_switch_remembers_analog(browser, base_url, keyboard, app):
+    page, cdp = await open_phone(browser, base_url, VIEWPORTS["iphone-15-landscape"], left=None)
+    assert await page.locator("#dpad-zone").is_visible() and not await page.locator("#stick-zone").is_visible()
+    assert await page.get_by_role("radio", name="Cruceta").get_attribute("aria-checked") == "true"
+
+    box = await page.locator("#dpad").bounding_box()
+    cx, cy, half = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, box["width"] / 2
+    await touch(cdp, "touchStart", {1: (cx, cy)})                      # the center is a dead zone
+    assert await held(keyboard) == set()
+    await touch(cdp, "touchMove", {1: (cx, cy - half * 0.7)})
+    assert await held(keyboard) == {"up"}
+    assert await page.locator(".arm.up.pressed").count() == 1
+    await touch(cdp, "touchMove", {1: (cx + half * 0.6, cy - half * 0.6)})
+    assert await held(keyboard) == {"up", "right"}
+    await touch(cdp, "touchMove", {1: (cx + half * 0.7, cy + half * 0.1)})
+    assert await held(keyboard) == {"right"}
+    await touch(cdp, "touchEnd", {})
+    assert await held(keyboard) == set()
+
+    # Football mode works on the d-pad too: a little past its edge also holds R1 (E).
+    await choose_layout(page, "PlayStation")
+    await touch(cdp, "touchStart", {1: (cx, cy - half * 0.7)})
+    await touch(cdp, "touchMove", {1: (cx, cy - half * 1.5)})
+    assert await held(keyboard) == {"up", "e"}
+    assert await page.locator(".shoulder.r1.auto").count() == 1
+    await touch(cdp, "touchEnd", {})
+    assert await held(keyboard) == set()
+
+    # Switch to analog: the stick takes over, and the phone remembers it after a reload.
+    await page.get_by_role("radio", name="Analógico").tap()
+    assert await page.locator("#stick-zone").is_visible() and not await page.locator("#dpad-zone").is_visible()
+    sx, sy = await center(page, "#stick-zone")
+    await touch(cdp, "touchStart", {1: (sx, sy)})
+    await touch(cdp, "touchMove", {1: (sx - 55, sy)})
+    assert await held(keyboard) == {"left"}
+    await touch(cdp, "touchEnd", {})
+    await page.reload()
+    await page.wait_for_function("document.getElementById('status').dataset.state === 'on'")
+    assert await page.get_by_role("radio", name="Analógico").get_attribute("aria-checked") == "true"
+    assert await page.locator("#stick-zone").is_visible()

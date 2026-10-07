@@ -10,8 +10,8 @@ Phone Joystick convierte tu teléfono en un joystick para tu notebook. Está pen
 
 - iPhone (Safari) y Android (Chrome). En el teléfono no se instala nada; se escanea un código QR.
 - Windows y macOS.
-- Stick de 8 direcciones, cuatro botones, L1, R1, Start y Select. La tecla de cada uno se elige en la [página de configuración](#página-de-configuración), y podés tener todos los perfiles que quieras.
-- Modo fútbol: si llevás el stick un poco más allá del borde de su círculo, también se aprieta el botón de correr, así corrés mientras el pulgar derecho pasa y patea.
+- Cruceta o analógico, a elección desde la barra de arriba del teléfono, más cuatro botones, L1, R1, Start y Select. La tecla de cada uno se elige en la [página de configuración](#página-de-configuración), y podés tener todos los perfiles que quieras.
+- Modo fútbol: si llevás el dedo un poco más allá del borde de la cruceta o del analógico, también se aprieta el botón de correr, así corrés mientras el pulgar derecho pasa y patea.
 - En español, portugués e inglés.
 - Varios dedos a la vez, y un dedo puede deslizarse de un botón al otro.
 - Si el teléfono se bloquea o se corta la Wi-Fi, todas las teclas se sueltan en menos de 1,5 segundos.
@@ -45,7 +45,7 @@ Estos tres vienen de fábrica, y en la página de configuración podés cambiarl
 
 | Control | Flechas | WASD | PlayStation |
 | --- | --- | --- | --- |
-| Stick | ↑ ↓ ← → | W A S D | ↑ ↓ ← → |
+| Direcciones | ↑ ↓ ← → | W A S D | ↑ ↓ ← → |
 | A / ✕ | Espacio | Espacio | X |
 | B / ○ | Z | Shift | D |
 | X / □ | X | E | A |
@@ -64,11 +64,11 @@ Abrí **http://localhost:8777/setup** en un navegador de la computadora donde co
 
 - **Teclas.** Ves el control con la tecla debajo de cada botón. Hacé clic en un botón y apretá la tecla que quieras. **Sin tecla** saca ese botón del teléfono.
 - **Perfiles.** Podés crearlos, duplicarlos, renombrarlos y borrarlos, y elegir cuál usa el teléfono con **Usar en el teléfono**.
-- **Stick.** Poné las cuatro direcciones en flechas o en WASD con un clic, o hacé clic en cada dirección y asignala como cualquier otro botón.
+- **Direcciones.** Ponelas en flechas o en WASD con un clic, o hacé clic en cada una y asignala como cualquier otro botón. La cruceta y el analógico usan las mismas teclas.
 - **Botones.** Se muestran como A B X Y o como ✕ ○ □ △.
-- **Modo fútbol.** En el teléfono cuesta apretar el botón de correr mientras movés el stick. Con el modo fútbol prendido, cuando llevás el stick un poco más allá del borde de su círculo, el botón de correr se aprieta solo, y en el teléfono ese botón se ilumina mientras está apretado. Vos elegís cuál es el botón de correr.
+- **Modo fútbol.** En el teléfono cuesta apretar el botón de correr mientras te movés. Con el modo fútbol prendido, cuando llevás el dedo un poco más allá del borde de la cruceta o del círculo del analógico, el botón de correr se aprieta solo, y en el teléfono ese botón se ilumina mientras está apretado. Vos elegís cuál es el botón de correr.
 - **Idioma.** Las banderitas de arriba cambian entre español, portugués e inglés, en esta página y en el teléfono.
-- **Vibración.** El teléfono vibra un poquito cuando tocás un botón (en iPhone hace falta iOS 18 o más nuevo). Se apaga en **En el teléfono**.
+- **Vibración.** El teléfono vibra un poquito cuando tocás un botón (en iPhone vibra cuando levantás el dedo; Safari no deja hacerlo antes). Se apaga en **En el teléfono**.
 
 Los cambios se guardan solos y llegan al teléfono en el momento, aunque estés en medio de un partido y sin reiniciar nada. Si estás apretando un botón justo cuando le cambiás la tecla, se suelta la vieja y se aprieta la nueva.
 

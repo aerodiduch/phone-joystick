@@ -140,7 +140,7 @@ async def check_full_chain(p, page, kb) -> list[str]:
             await cdp.send("Input.dispatchTouchEvent", {
                 "type": kind, "touchPoints": [{"x": x, "y": y, "id": i} for i, (x, y) in pts.items()]})
 
-        z = await phone.locator("#stick-zone").bounding_box()
+        z = await phone.locator("#dpad").bounding_box()  # the phone starts on the d-pad
         a = await phone.locator(".btn.a").bounding_box()
         sx, sy = z["x"] + z["width"] / 2, z["y"] + z["height"] / 2
         ax, ay = a["x"] + a["width"] / 2, a["y"] + a["height"] / 2

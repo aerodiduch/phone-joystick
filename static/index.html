@@ -18,9 +18,21 @@
       <span class="dot"></span><span class="status-text" id="status-text"></span>
     </div>
     <div class="layouts" id="layouts" role="radiogroup"></div>
+    <div class="mode" id="mode" role="radiogroup">
+      <button role="radio" data-mode="dpad"><span class="mode-icon">✚</span><span class="mode-text" data-text="dpad"></span></button>
+      <button role="radio" data-mode="analog"><span class="mode-icon">◉</span><span class="mode-text" data-text="analog"></span></button>
+    </div>
   </header>
   <main class="pad">
-    <section class="stick-zone" id="stick-zone"><div class="stick-hint"></div></section>
+    <section class="stick-zone" id="stick-zone" hidden><div class="stick-hint"></div></section>
+    <section class="dpad-zone" id="dpad-zone">
+      <div class="dpad" id="dpad">
+        <span class="arm up" data-dir="up">▲</span>
+        <span class="arm down" data-dir="down">▼</span>
+        <span class="arm left" data-dir="left">◀</span>
+        <span class="arm right" data-dir="right">▶</span>
+      </div>
+    </section>
     <section class="buttons">
       <div class="face">
         <button class="btn y" data-control="y"><span class="name">Y</span><span class="key"></span></button>

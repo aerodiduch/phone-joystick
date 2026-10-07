@@ -12,6 +12,10 @@
 
   const token = new URLSearchParams(location.search).get("k") || "";
   const zone = document.getElementById("stick-zone");
+  const dpadZone = document.getElementById("dpad-zone");
+  const dpad = document.getElementById("dpad");
+  const arms = [...dpad.querySelectorAll("[data-dir]")];
+  const modeEl = document.getElementById("mode");
   const layoutsEl = document.getElementById("layouts");
   const sheet = document.getElementById("sheet");
   const sheetList = document.getElementById("sheet-list");
@@ -20,7 +24,12 @@
   const statusText = document.getElementById("status-text");
   const controls = [...document.querySelectorAll("[data-control]")];
   window.PJ.setLang("");
-  layoutsEl.setAttribute("aria-label", t("profile"));
+  function translate() {
+    layoutsEl.setAttribute("aria-label", t("profile"));
+    modeEl.setAttribute("aria-label", t("leftControl"));
+    for (const el of document.querySelectorAll("[data-text]")) el.textContent = t(el.dataset.text);
+  }
+  translate();
   statusText.textContent = t("off");
 
   let stick = new Set();      // directions, plus the sprint control while sprinting
@@ -85,7 +94,7 @@
     if (build && msg.build !== build) return location.reload(); // the server restarted with new code
     build = msg.build;
     window.PJ.setLang(msg.lang);
-    layoutsEl.setAttribute("aria-label", t("profile"));
+    translate();
     document.body.dataset.style = msg.style;
     stickSprint = msg.stickSprint;
     setHaptics(msg.haptics !== false);
@@ -133,14 +142,6 @@
   }
   sheet.addEventListener("pointerup", (e) => { if (e.target === sheet) sheet.hidden = true; });
 
-  const manager = nipplejs.create({
-    zone,
-    mode: "dynamic",
-    size: STICK_SIZE,
-    fadeTime: 80,
-    color: { front: "rgba(236, 238, 241, 0.9)", back: "rgba(236, 238, 241, 0.14)" },
-  });
-
   function setStick(next) {
     if (next.size === stick.size && [...next].every((d) => stick.has(d))) return;
     stick = next;
@@ -148,25 +149,79 @@
     send();
   }
 
-  manager.on("start", () => zone.classList.add("active"));
-  manager.on("end", () => { zone.classList.remove("active", "sprint"); setStick(new Set()); });
-  manager.on("move", (evt) => {
-    const { x, y } = evt.data.vector; // -1..1, y points up
-    const magnitude = Math.min(Math.hypot(x, y), 1);
-    if (magnitude < (stick.size ? STICK_OFF : STICK_ON)) {
-      zone.classList.remove("sprint");
-      return setStick(new Set());
-    }
-    const ux = x / Math.hypot(x, y), uy = y / Math.hypot(x, y);
+  // Both left controls end here: x and y point right and up, 1 = the edge of the ring or pad.
+  // 8 sectors of 45° (the same cones as the PES 6 Web d-pad), with hysteresis so edges don't flicker.
+  function steer(x, y, reach) {
+    const magnitude = Math.hypot(x, y);
+    if (magnitude < (stick.size ? STICK_OFF : STICK_ON)) return setStick(new Set());
+    const ux = x / magnitude, uy = y / magnitude;
     const next = new Set();
     const axis = (dir, v) => { if (v > (stick.has(dir) ? AXIS_OFF : AXIS_ON)) next.add(dir); };
     axis("right", ux); axis("left", -ux); axis("up", uy); axis("down", -uy);
-    // Football mode: a little past the ring the run control goes down too (Xbox touch guide: joystick actionThreshold).
-    const reach = evt.data.raw.distance / (STICK_SIZE / 2);
+    // Football mode: a little past the edge the run control goes down too (Xbox touch guide: actionThreshold).
     if (stickSprint && reach > (stick.has(stickSprint) ? SPRINT_OFF : SPRINT_ON)) next.add(stickSprint);
-    zone.classList.toggle("sprint", next.has(stickSprint));
     setStick(next);
+  }
+
+  // Analog: a stick that appears where the thumb lands.
+  let manager = null;
+  function createStick() {
+    const m = nipplejs.create({
+      zone,
+      mode: "dynamic",
+      size: STICK_SIZE,
+      fadeTime: 80,
+      color: { front: "rgba(236, 238, 241, 0.9)", back: "rgba(236, 238, 241, 0.14)" },
+    });
+    m.on("start", () => zone.classList.add("active"));
+    m.on("end", () => { zone.classList.remove("active"); setStick(new Set()); });
+    m.on("move", (evt) => {
+      const { x, y } = evt.data.vector;
+      steer(x, y, evt.data.raw.distance / (STICK_SIZE / 2));
+    });
+    return m;
+  }
+
+  // D-pad: fixed in place; the whole left half reads the thumb relative to its center.
+  let dpadPointer = null;
+  function dpadMove(e) {
+    const r = dpad.getBoundingClientRect(), half = r.width / 2;
+    const x = (e.clientX - r.left - half) / half, y = (r.top + half - e.clientY) / half;
+    steer(x, y, Math.hypot(x, y));
+  }
+  dpadZone.addEventListener("pointerdown", (e) => {
+    if (dpadPointer !== null) return;
+    dpadPointer = e.pointerId;
+    dpadMove(e);
   });
+  dpadZone.addEventListener("pointermove", (e) => { if (e.pointerId === dpadPointer) dpadMove(e); });
+  for (const type of ["pointerup", "pointercancel"]) {
+    dpadZone.addEventListener(type, (e) => {
+      if (e.pointerId !== dpadPointer) return;
+      dpadPointer = null;
+      setStick(new Set());
+    });
+  }
+
+  let mode = "dpad";
+  try { mode = localStorage.getItem("pj.leftControl") === "analog" ? "analog" : "dpad"; } catch {}
+  function setMode(next) {
+    mode = next;
+    try { localStorage.setItem("pj.leftControl", mode); } catch {}
+    dpadPointer = null;
+    stick = new Set();
+    zone.hidden = mode !== "analog";
+    dpadZone.hidden = mode !== "dpad";
+    if (mode === "analog" && !manager) manager = createStick();
+    if (mode === "dpad" && manager) { manager.destroy(); manager = null; }
+    for (const b of modeEl.querySelectorAll("[data-mode]")) {
+      b.setAttribute("aria-checked", String(b.dataset.mode === mode));
+    }
+    updateButtons();
+  }
+  for (const b of modeEl.querySelectorAll("[data-mode]")) {
+    b.addEventListener("pointerup", () => { if (b.dataset.mode !== mode) setMode(b.dataset.mode); });
+  }
 
   // Buttons are hit-tested by position, so a finger can slide from one to the next.
   function controlAt(x, y) {
@@ -184,6 +239,9 @@
   }
 
   function render() {
+    for (const arm of arms) arm.classList.toggle("pressed", stick.has(arm.dataset.dir));
+    dpadZone.classList.toggle("sprint", stick.has(stickSprint));
+    zone.classList.toggle("sprint", stick.has(stickSprint));
     for (const el of controls) {
       el.classList.toggle("pressed", buttons.has(el.dataset.control));
       el.classList.toggle("auto", stick.has(el.dataset.control));
@@ -199,7 +257,7 @@
   }
 
   document.addEventListener("pointerdown", (e) => {
-    if (zone.contains(e.target) || layoutsEl.contains(e.target) || sheet.contains(e.target)) return;
+    if ([zone, dpadZone, modeEl, layoutsEl, sheet].some((el) => el.contains(e.target))) return;
     pointers.set(e.pointerId, controlAt(e.clientX, e.clientY));
     updateButtons();
   });
@@ -230,5 +288,6 @@
   document.addEventListener("gesturestart", (e) => e.preventDefault());
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 
+  setMode(mode);
   connect();
 })();

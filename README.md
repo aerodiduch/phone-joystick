@@ -10,9 +10,9 @@ Phone Joystick turns your phone into a joystick for your laptop. It's meant for 
 
 - iPhone (Safari) and Android (Chrome). Nothing to install on the phone; you scan a QR code.
 - Windows and macOS.
-- Stick with 8 directions, four face buttons, L1, R1, Start and Select. You choose the key for each one on a [setup page](#setup-page), and keep as many profiles as you want.
+- A d-pad or an analog stick, switched from the phone's top bar, plus four face buttons, L1, R1, Start and Select. You choose the key for each one on a [setup page](#setup-page), and keep as many profiles as you want.
 - Several fingers at once, and a finger can slide from one button to the next.
-- Football mode: pushing the stick a little past the edge of its circle also holds the run button, so you sprint while your right thumb passes and shoots.
+- Football mode: sliding your thumb a little past the edge of the d-pad or the stick also holds the run button, so you sprint while your right thumb passes and shoots.
 - In Spanish, Portuguese and English.
 - If the phone locks or the Wi-Fi drops, every key is released within 1.5 seconds.
 
@@ -45,7 +45,7 @@ These three come built in, and you can change them or add your own on the setup 
 
 | Control | Arrows | WASD | PlayStation |
 | --- | --- | --- | --- |
-| Stick | ↑ ↓ ← → | W A S D | ↑ ↓ ← → |
+| Directions | ↑ ↓ ← → | W A S D | ↑ ↓ ← → |
 | A / ✕ | Space | Space | X |
 | B / ○ | Z | Shift | D |
 | X / □ | X | E | A |
@@ -64,11 +64,11 @@ Open **http://localhost:8777/setup** in a browser on the computer that runs Phon
 
 - **Keys.** You see the controller with the key under each control. Click a control and press the key you want. **No key** hides that control on the phone.
 - **Profiles.** Create, duplicate, rename and delete them, and pick the one the phone uses with **Use on the phone**.
-- **Stick.** Set the four directions to arrows or WASD in one click, or click each direction and assign it like any other control.
+- **Directions.** Set them to arrows or WASD in one click, or click each one and assign it like any other control. The d-pad and the stick use the same keys.
 - **Buttons.** Show them as A B X Y or as ✕ ○ □ △.
-- **Football mode.** On a phone it's hard to hold the run button while you move the stick. With football mode on, pushing the stick a little past the edge of its circle presses the run button for you, and the button lights up on the phone while it's held. You choose which button runs.
+- **Football mode.** On a phone it's hard to hold the run button while you move. With football mode on, sliding your thumb a little past the edge of the d-pad or the stick's circle presses the run button for you, and the button lights up on the phone while it's held. You choose which button runs.
 - **Language.** The flags at the top switch between Spanish, Portuguese and English, on this page and on the phone.
-- **Vibration.** The phone gives a short vibration when you tap a button (iPhone needs iOS 18 or later). Turn it off under **On the phone**.
+- **Vibration.** The phone gives a short vibration when you tap a button (on iPhone it buzzes when you lift your finger; Safari doesn't allow it any sooner). Turn it off under **On the phone**.
 
 Changes save themselves and reach the phone at once, even in the middle of a match, without restarting anything. If you're holding a button when you change its key, the old key is released and the new one pressed.
 

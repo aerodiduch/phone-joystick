@@ -1,26 +1,3 @@
-:root {
-  --bg: #101216;
-  --surface: #1b1e24;
-  --border: #2c313a;
-  --text: #eceef1;
-  --muted: #a3a9b2;
-  --ok: #34c759;
-  --off: #ff453a;
-  --sprint: #5ac8fa;
-  --a: #3ccf6e;
-  --b: #ff5f57;
-  --x: #4c93ff;
-  --y: #ffc531;
-}
-
-/* PlayStation symbol colors: ✕ blue, ○ red, □ pink, △ green. */
-body[data-style="playstation"] {
-  --a: #7aa7ff;
-  --b: #ff6b6b;
-  --x: #ea8fd8;
-  --y: #5fd6a8;
-}
-
 * {
   box-sizing: border-box;
   touch-action: none;
@@ -103,7 +80,53 @@ button {
   white-space: nowrap;
 }
 
-.layouts button[aria-checked="true"] {
+.layouts button[aria-checked="true"],
+.layouts.compact button {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.layouts.compact button {
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 56px) 16px 16px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.sheet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 4px;
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.sheet-list button {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-list button[aria-checked="true"] {
   background: var(--text);
   color: var(--bg);
 }

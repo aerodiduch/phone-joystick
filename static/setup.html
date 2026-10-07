@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101216">
+  <title>Phone Joystick</title>
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/setup.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Phone Joystick</h1>
+    <span class="phones" id="phones" data-state="off"><span class="dot"></span><span id="phones-text"></span></span>
+    <span class="save-status" id="save-status" role="status"></span>
+  </header>
+
+  <main class="layout">
+    <nav class="profiles">
+      <h2 data-text="profiles"></h2>
+      <ul class="profile-list" id="profile-list"></ul>
+      <button class="button" id="new-profile" data-text="newProfile"></button>
+      <button class="link" id="reset" data-text="reset"></button>
+    </nav>
+
+    <section class="editor" id="editor">
+      <div class="editor-head">
+        <input class="name-input" id="profile-name" maxlength="40" autocomplete="off" spellcheck="false">
+        <span class="badge" id="in-use" data-text="inUse"></span>
+        <button class="button primary" id="use-profile" data-text="use"></button>
+      </div>
+
+      <div class="device" id="device">
+        <button class="chip shoulder l1" data-control="l1"><span class="name">L1</span><span class="key"></span></button>
+        <button class="chip shoulder r1" data-control="r1"><span class="name">R1</span><span class="key"></span></button>
+        <div class="stick">
+          <div class="stick-ring"></div>
+          <button class="chip dir up" data-control="up"><span class="key"></span></button>
+          <button class="chip dir down" data-control="down"><span class="key"></span></button>
+          <button class="chip dir left" data-control="left"><span class="key"></span></button>
+          <button class="chip dir right" data-control="right"><span class="key"></span></button>
+        </div>
+        <div class="face">
+          <button class="chip round y" data-control="y"><span class="name">Y</span><span class="key"></span></button>
+          <button class="chip round x" data-control="x"><span class="name">X</span><span class="key"></span></button>
+          <button class="chip round b" data-control="b"><span class="name">B</span><span class="key"></span></button>
+          <button class="chip round a" data-control="a"><span class="name">A</span><span class="key"></span></button>
+        </div>
+        <div class="system">
+          <button class="chip pill" data-control="select"><span class="name">Select</span><span class="key"></span></button>
+          <button class="chip pill" data-control="start"><span class="name">Start</span><span class="key"></span></button>
+        </div>
+      </div>
+
+      <div class="capture" id="capture" hidden>
+        <span id="capture-text"></span>
+        <span class="capture-actions">
+          <button class="button" id="clear-key" data-text="noKey"></button>
+          <button class="button" id="cancel-capture" data-text="cancel"></button>
+        </span>
+      </div>
+
+      <div class="options">
+        <div class="option">
+          <span class="option-label" data-text="stick"></span>
+          <div class="segmented">
+            <button data-stick="arrows" data-text="arrows"></button>
+            <button data-stick="wasd">WASD</button>
+          </div>
+        </div>
+        <div class="option">
+          <span class="option-label" data-text="buttons"></span>
+          <div class="segmented" role="radiogroup">
+            <button role="radio" data-style="">A B X Y</button>
+            <button role="radio" data-style="playstation">✕ ○ □ △</button>
+          </div>
+        </div>
+        <div class="option">
+          <label class="option-label" for="sprint" data-text="sprint"></label>
+          <select class="select" id="sprint"></select>
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button class="button" id="duplicate" data-text="duplicate"></button>
+        <button class="button danger" id="delete" data-text="delete"></button>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="confirm" id="confirm">
+    <form method="dialog">
+      <p id="confirm-text"></p>
+      <div class="confirm-actions">
+        <button class="button" value="cancel" data-text="cancel"></button>
+        <button class="button danger" value="ok" id="confirm-ok"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/common.js"></script>
+  <script src="/static/setup.js"></script>
+</body>
+</html>

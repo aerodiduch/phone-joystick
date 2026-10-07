@@ -122,7 +122,7 @@ async def check_keycodes(page, kb) -> list[str]:
 async def check_full_chain(p, page, kb) -> list[str]:
     from aiohttp.test_utils import TestServer
 
-    layouts, _ = server.load_layouts(server.LAYOUTS_FILE)
+    layouts, _ = server.load_layouts(server.DEFAULT_LAYOUTS_FILE)
     state = Path(__file__).resolve().parent / ".real-keys-state.json"
     app = server.create_app(kb, layouts, "arrows", TOKEN, state_path=state)
     srv = TestServer(app, port=0)

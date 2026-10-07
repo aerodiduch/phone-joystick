@@ -5,3 +5,4 @@ state.json
 .claude/settings.local.json
 tests/screenshots/
 tests/.real-keys-state.json
+profiles.json

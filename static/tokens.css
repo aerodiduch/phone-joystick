@@ -1,0 +1,23 @@
+:root {
+  --bg: #101216;
+  --surface: #1b1e24;
+  --surface-2: #242830;
+  --border: #2c313a;
+  --text: #eceef1;
+  --muted: #a3a9b2;
+  --ok: #34c759;
+  --off: #ff453a;
+  --sprint: #5ac8fa;
+  --a: #3ccf6e;
+  --b: #ff5f57;
+  --x: #4c93ff;
+  --y: #ffc531;
+}
+
+/* PlayStation symbol colors: ✕ blue, ○ red, □ pink, △ green. */
+[data-style="playstation"] {
+  --a: #7aa7ff;
+  --b: #ff6b6b;
+  --x: #ea8fd8;
+  --y: #5fd6a8;
+}

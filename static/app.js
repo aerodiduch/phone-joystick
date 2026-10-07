@@ -8,20 +8,18 @@
   const BUTTON_HIT = 1.15;                   // round buttons react a bit outside their edge
   const PING_MS = 500, PONG_TIMEOUT_MS = 2000;
 
-  const lang = navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
+  const { lang, keyLabel, layoutLabel } = window.PJ;
   const TEXT = {
-    es: { on: "Conectado", off: "Sin conexión", layouts: "Teclas", arrows: "Flechas",
-          space: "Espacio", backspace: "Borrar" },
-    en: { on: "Connected", off: "Disconnected", layouts: "Keys", arrows: "Arrows",
-          space: "Space", backspace: "Backspace" },
+    es: { on: "Conectado", off: "Sin conexión", layouts: "Perfil" },
+    en: { on: "Connected", off: "Disconnected", layouts: "Profile" },
   }[lang];
-  const KEY_LABELS = { space: TEXT.space, backspace: TEXT.backspace, enter: "Enter", escape: "Esc",
-                       tab: "Tab", shift: "Shift", up: "↑", down: "↓", left: "←", right: "→" };
-  const keyLabel = (key) => KEY_LABELS[key] || key.toUpperCase();
 
   const token = new URLSearchParams(location.search).get("k") || "";
   const zone = document.getElementById("stick-zone");
   const layoutsEl = document.getElementById("layouts");
+  const sheet = document.getElementById("sheet");
+  const sheetList = document.getElementById("sheet-list");
+  const bar = document.querySelector(".bar");
   const statusEl = document.getElementById("status");
   const statusText = document.getElementById("status-text");
   const controls = [...document.querySelectorAll("[data-control]")];
@@ -68,17 +66,7 @@
     build = msg.build;
     document.body.dataset.style = msg.style;
     stickSprint = msg.stickSprint;
-    layoutsEl.replaceChildren(...msg.layouts.map(({ id, label }) => {
-      const b = document.createElement("button");
-      b.textContent = TEXT[id] || label;
-      b.setAttribute("role", "radio");
-      b.setAttribute("aria-checked", String(id === msg.layout));
-      // pointerup, not click: touchstart is cancelled below, so iOS never fires click.
-      b.addEventListener("pointerup", () => {
-        if (isOpen()) ws.send(JSON.stringify({ type: "layout", name: id }));
-      });
-      return b;
-    }));
+    renderProfiles(msg.layouts, msg.layout);
     for (const el of controls) {
       const control = el.dataset.control;
       const name = el.querySelector(".name");
@@ -92,6 +80,35 @@
     }
     updateButtons();
   }
+
+  // pointerup, not click: touchstart is cancelled below, so iOS never fires click.
+  function profileButton(id, label, current, role = "radio") {
+    const b = document.createElement("button");
+    b.textContent = layoutLabel(id, label);
+    b.setAttribute("role", role);
+    b.setAttribute("aria-checked", String(id === current));
+    b.addEventListener("pointerup", () => {
+      sheet.hidden = true;
+      if (isOpen() && id !== current) ws.send(JSON.stringify({ type: "layout", name: id }));
+    });
+    return b;
+  }
+
+  // All profiles side by side while they fit; otherwise the current one opens a list.
+  function renderProfiles(layouts, current) {
+    layoutsEl.classList.remove("compact");
+    layoutsEl.replaceChildren(...layouts.map(({ id, label }) => profileButton(id, label, current)));
+    sheetList.replaceChildren(...layouts.map(({ id, label }) => profileButton(id, label, current)));
+    if (bar.scrollWidth <= bar.clientWidth + 1) return;
+    const active = layouts.find((l) => l.id === current);
+    const open = document.createElement("button");
+    open.textContent = `${layoutLabel(active.id, active.label)} ▾`;
+    open.setAttribute("aria-haspopup", "listbox");
+    open.addEventListener("pointerup", () => { sheet.hidden = false; });
+    layoutsEl.classList.add("compact");
+    layoutsEl.replaceChildren(open);
+  }
+  sheet.addEventListener("pointerup", (e) => { if (e.target === sheet) sheet.hidden = true; });
 
   const manager = nipplejs.create({
     zone,
@@ -157,7 +174,7 @@
   }
 
   document.addEventListener("pointerdown", (e) => {
-    if (zone.contains(e.target) || layoutsEl.contains(e.target)) return;
+    if (zone.contains(e.target) || layoutsEl.contains(e.target) || sheet.contains(e.target)) return;
     pointers.set(e.pointerId, controlAt(e.clientX, e.clientY));
     updateButtons();
   });

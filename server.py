@@ -7,6 +7,7 @@ import json
 import locale
 import logging
 import os
+import re
 import secrets
 import socket
 import subprocess
@@ -37,7 +38,8 @@ def user_dir() -> Path:
 
 USER_DIR = user_dir()
 STATE_FILE = USER_DIR / "state.json"
-LAYOUTS_FILE = USER_DIR / "layouts.json" if (USER_DIR / "layouts.json").exists() else ROOT / "layouts.json"
+DEFAULT_LAYOUTS_FILE = ROOT / "layouts.json"   # shipped profiles, never written
+PROFILES_FILE = USER_DIR / "profiles.json"     # the user's profiles, saved by /setup
 
 CONTROLS = ("up", "down", "left", "right", "a", "b", "x", "y", "l1", "r1", "start", "select")
 PING_TIMEOUT = 1.5  # seconds of silence before a phone's keys are released
@@ -50,20 +52,59 @@ MIN_HOLD = 0.06
 log = logging.getLogger("joystick")
 
 
-def load_layouts(path: Path) -> tuple[dict, str]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    layouts = data["layouts"]
-    # A layout maps any subset of CONTROLS; the phone hides the controls it leaves out.
+PROFILE_ID = re.compile(r"[a-z0-9_-]{1,40}")
+STYLES = ("", "playstation")
+
+
+def check_layouts(layouts) -> None:
+    """Raises ValueError if the layouts can't be used. A layout maps any subset of
+    CONTROLS; the phone hides the controls it leaves out."""
+    if not isinstance(layouts, dict) or not layouts:
+        raise ValueError("there must be at least one layout")
     for name, layout in layouts.items():
-        keys = layout["keys"]
-        unknown = sorted(set(keys) - set(CONTROLS))
-        unsupported = sorted({k for k in keys.values() if k not in SUPPORTED_KEYS})
+        if not PROFILE_ID.fullmatch(str(name)) or not isinstance(layout, dict):
+            raise ValueError(f"bad layout id {name!r}")
+        label = layout.get("label")
+        if not isinstance(label, str) or not label.strip() or len(label) > 40:
+            raise ValueError(f"layout {name!r}: the name must have 1 to 40 characters")
+        keys, names = layout.get("keys"), layout.get("names", {})
+        if not isinstance(keys, dict) or not isinstance(names, dict):
+            raise ValueError(f"layout {name!r}: keys and names must be objects")
+        unknown = sorted(set(keys) - set(CONTROLS)) + sorted(set(names) - set(CONTROLS))
+        unsupported = sorted(str(k) for k in keys.values() if k not in SUPPORTED_KEYS)
+        if any(not isinstance(v, str) or len(v) > 3 for v in names.values()):
+            unsupported.append("names")
+        if layout.get("style", "") not in STYLES:
+            unsupported.append("style")
         if layout.get("stickSprint") and layout["stickSprint"] not in keys:
             unknown.append(layout["stickSprint"])
         if unknown or unsupported:
-            raise ValueError(f"layout {name!r}: unknown controls {unknown}, unsupported keys {unsupported}")
-    default = data.get("default") or next(iter(layouts))
-    return layouts, default
+            raise ValueError(f"layout {name!r}: unknown controls {unknown}, unsupported values {unsupported}")
+
+
+def load_layouts(path: Path) -> tuple[dict, str]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    layouts = data["layouts"]
+    check_layouts(layouts)
+    default = data.get("default")
+    return layouts, default if default in layouts else next(iter(layouts))
+
+
+def load_profiles(path: Path = PROFILES_FILE) -> tuple[dict, str]:
+    """The user's profiles; the shipped ones if there are none yet or the file is broken.
+    The .exe from v0.2.0 told people to edit %APPDATA%\\phone-joystick\\layouts.json, so that is read too."""
+    for candidate in [path] + ([USER_DIR / "layouts.json"] if FROZEN else []):
+        if candidate.exists():
+            try:
+                return load_layouts(candidate)
+            except (ValueError, KeyError, TypeError) as error:
+                log.warning(TEXT["bad_profiles"], candidate, error)
+    return load_layouts(DEFAULT_LAYOUTS_FILE)
+
+
+def save_layouts(path: Path, layouts: dict, default: str) -> None:
+    data = {"default": default, "layouts": layouts}
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def load_state(path: Path) -> dict:
@@ -154,6 +195,7 @@ class Hub:
 HUB = web.AppKey("hub", Hub)
 TOKEN = web.AppKey("token", str)
 STATE_PATH = web.AppKey("state_path", Path)
+PROFILES_PATH = web.AppKey("profiles_path", Path)
 TIMEOUT = web.AppKey("timeout", float)
 
 
@@ -192,15 +234,7 @@ async def websocket(request: web.Request) -> web.WebSocketResponse:
                 phone.pressed = {c for c in data["pressed"] if c in CONTROLS}
                 hub.sync()
             elif kind == "layout" and data.get("name") in hub.layouts and data["name"] != hub.layout:
-                hub.layout = data["name"]
-                hub.sync()
-                state_path = request.app[STATE_PATH]
-                save_state(state_path, {**load_state(state_path), "layout": hub.layout})
-                log.info(TEXT["layout"], hub.layouts[hub.layout]["label"])
-                config = hub.config_message()
-                for other in hub.phones:
-                    if not other.ws.closed:
-                        await other.ws.send_json(config)
+                await use_layout(request.app, data["name"])
             elif kind == "ping":
                 await ws.send_json({"type": "pong"})
     finally:
@@ -208,6 +242,82 @@ async def websocket(request: web.Request) -> web.WebSocketResponse:
         hub.sync()
         log.info(TEXT["disconnected"], request.remote)
     return ws
+
+
+async def broadcast(app: web.Application) -> None:
+    config = app[HUB].config_message()
+    for phone in list(app[HUB].phones):
+        if not phone.ws.closed:
+            await phone.ws.send_json(config)
+
+
+async def use_layout(app: web.Application, name: str) -> None:
+    hub = app[HUB]
+    hub.layout = name
+    hub.sync()
+    save_state(app[STATE_PATH], {**load_state(app[STATE_PATH]), "layout": name})
+    log.info(TEXT["layout"], hub.layouts[name]["label"])
+    await broadcast(app)
+
+
+# The setup page changes what the phones press, so only this computer may open it. A web page
+# could still post to localhost from the user's own browser: the Host check stops DNS rebinding
+# and the custom header forces a CORS preflight that this server never answers.
+LOOPBACK = {"127.0.0.1", "::1", "::ffff:127.0.0.1"}
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def local_only(request: web.Request, api: bool = True) -> None:
+    host = (request.host or "").rsplit(":", 1)[0].strip("[]")
+    if request.remote not in LOOPBACK or host not in LOCAL_HOSTS:
+        raise web.HTTPForbidden(text="Open this page on the computer itself: http://localhost:<port>/setup")
+    if api and request.headers.get("X-Phone-Joystick") != "setup":
+        raise web.HTTPForbidden()
+
+
+def profiles_payload(app: web.Application) -> dict:
+    hub = app[HUB]
+    return {"layouts": hub.layouts, "active": hub.layout, "controls": CONTROLS,
+            "keys": sorted(SUPPORTED_KEYS), "phones": len(hub.phones)}
+
+
+async def save_profiles(app: web.Application, layouts: dict, active: str) -> None:
+    hub = app[HUB]
+    hub.layouts = layouts
+    save_layouts(app[PROFILES_PATH], layouts, active)
+    await use_layout(app, active)
+
+
+async def setup_page(request: web.Request) -> web.FileResponse:
+    local_only(request, api=False)
+    return web.FileResponse(STATIC_DIR / "setup.html")
+
+
+async def get_profiles(request: web.Request) -> web.Response:
+    local_only(request)
+    return web.json_response(profiles_payload(request.app))
+
+
+async def put_profiles(request: web.Request) -> web.Response:
+    local_only(request)
+    try:
+        data = await request.json()
+        layouts, active = data["layouts"], data["active"]
+        check_layouts(layouts)
+        if active not in layouts:
+            raise ValueError(f"unknown layout {active!r}")
+    except (ValueError, KeyError, TypeError) as error:
+        raise web.HTTPBadRequest(text=str(error))
+    await save_profiles(request.app, layouts, active)
+    return web.json_response(profiles_payload(request.app))
+
+
+async def reset_profiles(request: web.Request) -> web.Response:
+    local_only(request)
+    layouts, default = load_layouts(DEFAULT_LAYOUTS_FILE)
+    active = request.app[HUB].layout if request.app[HUB].layout in layouts else default
+    await save_profiles(request.app, layouts, active)
+    return web.json_response(profiles_payload(request.app))
 
 
 async def watchdog(app: web.Application):
@@ -242,14 +352,20 @@ async def no_cache(request: web.Request, response: web.StreamResponse) -> None:
 
 
 def create_app(keyboard, layouts: dict, layout: str, token: str, state_path: Path = STATE_FILE,
-               timeout: float = PING_TIMEOUT, min_hold: float = MIN_HOLD) -> web.Application:
+               timeout: float = PING_TIMEOUT, min_hold: float = MIN_HOLD,
+               profiles_path: Path = PROFILES_FILE) -> web.Application:
     app = web.Application()
     app[HUB] = Hub(keyboard, layouts, layout, min_hold)
     app[TOKEN] = token
     app[STATE_PATH] = state_path
+    app[PROFILES_PATH] = profiles_path
     app[TIMEOUT] = timeout
     app.router.add_get("/", index)
     app.router.add_get("/ws", websocket)
+    app.router.add_get("/setup", setup_page)
+    app.router.add_get("/api/profiles", get_profiles)
+    app.router.add_put("/api/profiles", put_profiles)
+    app.router.add_post("/api/profiles/reset", reset_profiles)
     app.router.add_static("/static", STATIC_DIR)
     app.cleanup_ctx.append(watchdog)
     app.on_shutdown.append(on_shutdown)
@@ -294,7 +410,9 @@ MESSAGES = {
         "connected": "Teléfono conectado (%s)",
         "disconnected": "Teléfono desconectado (%s)",
         "silent": "El teléfono dejó de responder: suelto sus teclas",
-        "layout": "Teclas: %s",
+        "layout": "Perfil: %s",
+        "setup": "Para elegir las teclas, abrí en esta computadora: http://localhost:%d/setup",
+        "bad_profiles": "No pude leer los perfiles de %s (%s); uso los de fábrica",
     },
     "en": {
         "description": "Use your phone as a joystick to play on this computer.",
@@ -308,7 +426,9 @@ MESSAGES = {
         "connected": "Phone connected (%s)",
         "disconnected": "Phone disconnected (%s)",
         "silent": "The phone stopped responding: releasing its keys",
-        "layout": "Keys: %s",
+        "layout": "Profile: %s",
+        "setup": "To choose the keys, open this on this computer: http://localhost:%d/setup",
+        "bad_profiles": "Couldn't read the profiles in %s (%s); using the built-in ones",
     },
 }
 TEXT = MESSAGES["en"]
@@ -344,7 +464,7 @@ def main() -> None:
                 time.sleep(1)
         keyboard = system_keyboard()
 
-    layouts, default = load_layouts(LAYOUTS_FILE)
+    layouts, default = load_profiles()
     state = load_state(STATE_FILE)
     if "token" not in state:
         state["token"] = secrets.token_urlsafe(8)
@@ -357,7 +477,7 @@ def main() -> None:
     url = f"http://{lan_address()}:{args.port}/?k={state['token']}"
     print(f"\n{text['scan']}\n")
     print_qr(url)
-    print(f"{url}\n\n{text['ready']}\n", flush=True)
+    print(f"{url}\n\n{text['ready']}\n{text['setup'] % args.port}\n", flush=True)
     web.run_app(app, port=args.port, print=None, access_log=None)
 
 

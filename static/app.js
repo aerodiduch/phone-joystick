@@ -4,15 +4,11 @@
   const STICK_SIZE = 120;
   const STICK_ON = 0.3, STICK_OFF = 0.2;     // deflection that engages / releases the stick
   const AXIS_ON = 0.42, AXIS_OFF = 0.34;     // per-axis threshold: 8 sectors of 45°
-  const SPRINT_ON = 1.3, SPRINT_OFF = 1.15;  // finger distance / stick radius
+  const SPRINT_ON = 0.95, SPRINT_OFF = 0.85; // football mode: finger distance / stick radius
   const BUTTON_HIT = 1.15;                   // round buttons react a bit outside their edge
   const PING_MS = 500, PONG_TIMEOUT_MS = 2000;
 
-  const { lang, keyLabel, layoutLabel } = window.PJ;
-  const TEXT = {
-    es: { on: "Conectado", off: "Sin conexión", layouts: "Perfil" },
-    en: { on: "Connected", off: "Disconnected", layouts: "Profile" },
-  }[lang];
+  const { t, keyLabel, layoutLabel } = window.PJ;
 
   const token = new URLSearchParams(location.search).get("k") || "";
   const zone = document.getElementById("stick-zone");
@@ -23,9 +19,9 @@
   const statusEl = document.getElementById("status");
   const statusText = document.getElementById("status-text");
   const controls = [...document.querySelectorAll("[data-control]")];
-  document.documentElement.lang = lang;
-  layoutsEl.setAttribute("aria-label", TEXT.layouts);
-  statusText.textContent = TEXT.off;
+  window.PJ.setLang("");
+  layoutsEl.setAttribute("aria-label", t("profile"));
+  statusText.textContent = t("off");
 
   let stick = new Set();      // directions, plus the sprint control while sprinting
   let buttons = new Set();
@@ -58,12 +54,14 @@
     if (isOpen()) ws.send('{"type":"ping"}');
     const on = isOpen() && Date.now() - lastPong < PONG_TIMEOUT_MS;
     statusEl.dataset.state = on ? "on" : "off";
-    statusText.textContent = on ? TEXT.on : TEXT.off;
+    statusText.textContent = t(on ? "on" : "off");
   }, PING_MS);
 
   function applyConfig(msg) {
     if (build && msg.build !== build) return location.reload(); // the server restarted with new code
     build = msg.build;
+    window.PJ.setLang(msg.lang);
+    layoutsEl.setAttribute("aria-label", t("profile"));
     document.body.dataset.style = msg.style;
     stickSprint = msg.stickSprint;
     renderProfiles(msg.layouts, msg.layout);
@@ -138,7 +136,7 @@
     const next = new Set();
     const axis = (dir, v) => { if (v > (stick.has(dir) ? AXIS_OFF : AXIS_ON)) next.add(dir); };
     axis("right", ux); axis("left", -ux); axis("up", uy); axis("down", -uy);
-    // Past the ring, the layout's sprint control goes down too (Xbox touch guide: joystick actionThreshold).
+    // Football mode: at the edge of the ring the run control goes down too (Xbox touch guide: joystick actionThreshold).
     const reach = evt.data.raw.distance / (STICK_SIZE / 2);
     if (stickSprint && reach > (stick.has(stickSprint) ? SPRINT_OFF : SPRINT_ON)) next.add(stickSprint);
     zone.classList.toggle("sprint", next.has(stickSprint));

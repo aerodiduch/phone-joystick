@@ -133,6 +133,7 @@ class Hub:
         self.layouts = layouts
         self.layout = layout
         self.min_hold = min_hold
+        self.lang = ""  # "" follows each device's language
         self.phones: list[Phone] = []
         self.held: set[str] = set()
         self.down_at: dict[str, float] = {}
@@ -189,6 +190,7 @@ class Hub:
             "names": current.get("names", {}),
             "style": current.get("style", ""),
             "stickSprint": current.get("stickSprint", ""),
+            "lang": self.lang,
         }
 
 
@@ -278,7 +280,7 @@ def local_only(request: web.Request, api: bool = True) -> None:
 def profiles_payload(app: web.Application) -> dict:
     hub = app[HUB]
     return {"layouts": hub.layouts, "active": hub.layout, "controls": CONTROLS,
-            "keys": sorted(SUPPORTED_KEYS), "phones": len(hub.phones)}
+            "keys": sorted(SUPPORTED_KEYS), "phones": len(hub.phones), "lang": hub.lang}
 
 
 async def save_profiles(app: web.Application, layouts: dict, active: str) -> None:
@@ -309,6 +311,22 @@ async def put_profiles(request: web.Request) -> web.Response:
     except (ValueError, KeyError, TypeError) as error:
         raise web.HTTPBadRequest(text=str(error))
     await save_profiles(request.app, layouts, active)
+    return web.json_response(profiles_payload(request.app))
+
+
+async def set_language(request: web.Request) -> web.Response:
+    local_only(request)
+    try:
+        lang = (await request.json())["lang"]
+    except (ValueError, KeyError, TypeError):
+        raise web.HTTPBadRequest()
+    if lang not in ("", *MESSAGES):
+        raise web.HTTPBadRequest(text=f"unknown language {lang!r}")
+    global TEXT
+    TEXT = MESSAGES[lang or system_language()]
+    request.app[HUB].lang = lang
+    save_state(request.app[STATE_PATH], {**load_state(request.app[STATE_PATH]), "lang": lang})
+    await broadcast(request.app)
     return web.json_response(profiles_payload(request.app))
 
 
@@ -353,9 +371,10 @@ async def no_cache(request: web.Request, response: web.StreamResponse) -> None:
 
 def create_app(keyboard, layouts: dict, layout: str, token: str, state_path: Path = STATE_FILE,
                timeout: float = PING_TIMEOUT, min_hold: float = MIN_HOLD,
-               profiles_path: Path = PROFILES_FILE) -> web.Application:
+               profiles_path: Path = PROFILES_FILE, lang: str = "") -> web.Application:
     app = web.Application()
     app[HUB] = Hub(keyboard, layouts, layout, min_hold)
+    app[HUB].lang = lang
     app[TOKEN] = token
     app[STATE_PATH] = state_path
     app[PROFILES_PATH] = profiles_path
@@ -366,6 +385,7 @@ def create_app(keyboard, layouts: dict, layout: str, token: str, state_path: Pat
     app.router.add_get("/api/profiles", get_profiles)
     app.router.add_put("/api/profiles", put_profiles)
     app.router.add_post("/api/profiles/reset", reset_profiles)
+    app.router.add_post("/api/lang", set_language)
     app.router.add_static("/static", STATIC_DIR)
     app.cleanup_ctx.append(watchdog)
     app.on_shutdown.append(on_shutdown)
@@ -387,14 +407,19 @@ def lan_address() -> str:
             return socket.gethostname()
 
 
-def spanish() -> bool:
+def system_language() -> str:
     lang = os.environ.get("LANG") or ""
     if not lang:
         try:
             lang = locale.getlocale()[0] or ""
         except ValueError:
             pass
-    return lang.lower().startswith(("es", "spanish"))
+    lang = lang.lower()
+    if lang.startswith(("es", "spanish")):
+        return "es"
+    if lang.startswith(("pt", "portuguese")):
+        return "pt"
+    return "en"
 
 
 MESSAGES = {
@@ -413,6 +438,22 @@ MESSAGES = {
         "layout": "Perfil: %s",
         "setup": "Para elegir las teclas, abrí en esta computadora: http://localhost:%d/setup",
         "bad_profiles": "No pude leer los perfiles de %s (%s); uso los de fábrica",
+    },
+    "pt": {
+        "description": "Use o celular como joystick para jogar no computador.",
+        "dry_run": "não aperta teclas, só mostra",
+        "verbose": "mostra cada tecla e quanto tempo ficou apertada",
+        "accessibility": "Este app precisa da permissão de Acessibilidade.\n"
+                         "Ative em Ajustes do Sistema → Privacidade e Segurança → Acessibilidade. "
+                         "Fico esperando; continua sozinho quando você ativar.",
+        "scan": "Escaneie o código com a câmera do celular (mesma rede Wi-Fi deste computador):",
+        "ready": "Deixe o jogo em primeiro plano. Ctrl+C para sair.",
+        "connected": "Celular conectado (%s)",
+        "disconnected": "Celular desconectado (%s)",
+        "silent": "O celular parou de responder: soltando as teclas dele",
+        "layout": "Perfil: %s",
+        "setup": "Para escolher as teclas, abra neste computador: http://localhost:%d/setup",
+        "bad_profiles": "Não consegui ler os perfis de %s (%s); usando os originais",
     },
     "en": {
         "description": "Use your phone as a joystick to play on this computer.",
@@ -445,7 +486,9 @@ def print_qr(url: str) -> None:
 
 def main() -> None:
     global TEXT
-    TEXT = text = MESSAGES["es" if spanish() else "en"]
+    state = load_state(STATE_FILE)
+    lang = state.get("lang") if state.get("lang") in MESSAGES else ""
+    TEXT = text = MESSAGES[lang or system_language()]
     parser = argparse.ArgumentParser(description=text["description"])
     parser.add_argument("--port", type=int, default=8777)
     parser.add_argument("--dry-run", action="store_true", help=text["dry_run"])
@@ -465,13 +508,12 @@ def main() -> None:
         keyboard = system_keyboard()
 
     layouts, default = load_profiles()
-    state = load_state(STATE_FILE)
     if "token" not in state:
         state["token"] = secrets.token_urlsafe(8)
         save_state(STATE_FILE, state)
     layout = state["layout"] if state.get("layout") in layouts else default
 
-    app = create_app(keyboard, layouts, layout, state["token"])
+    app = create_app(keyboard, layouts, layout, state["token"], lang=lang)
     atexit.register(app[HUB].release_all)
 
     url = f"http://{lan_address()}:{args.port}/?k={state['token']}"

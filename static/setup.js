@@ -1,36 +1,8 @@
 (() => {
   "use strict";
 
-  const { lang, keyLabel, layoutLabel } = window.PJ;
-  const T = {
-    es: {
-      title: "Controles", profiles: "Perfiles", newProfile: "Nuevo perfil", reset: "Volver a los perfiles de fábrica",
-      inUse: "En uso", use: "Usar en el teléfono", stick: "Stick", arrows: "Flechas", buttons: "Botones",
-      sprint: "Al llevar el stick más allá del aro, apretar también", nothing: "Nada",
-      duplicate: "Duplicar", delete: "Borrar perfil", noKey: "Sin tecla", cancel: "Cancelar",
-      capture: "Apretá la tecla para {name}", notAllowed: "{key} no se puede usar. Probá con otra tecla.",
-      saving: "Guardando…", saved: "Guardado", saveError: "No se pudo guardar",
-      phones0: "Ningún teléfono conectado", phones1: "1 teléfono conectado", phonesN: "{n} teléfonos conectados",
-      serverDown: "Phone Joystick no está abierto",
-      confirmDelete: "¿Borrar el perfil «{name}»?", confirmReset: "¿Volver a los perfiles de fábrica? Se pierden los perfiles y los cambios que hiciste.",
-      deleteOk: "Borrar", resetOk: "Volver a los de fábrica", newName: "Perfil {n}", copy: "{name} (copia)",
-      up: "stick arriba", down: "stick abajo", left: "stick a la izquierda", right: "stick a la derecha",
-    },
-    en: {
-      title: "Controls", profiles: "Profiles", newProfile: "New profile", reset: "Go back to the built-in profiles",
-      inUse: "In use", use: "Use on the phone", stick: "Stick", arrows: "Arrows", buttons: "Buttons",
-      sprint: "When the stick goes past its ring, also press", nothing: "Nothing",
-      duplicate: "Duplicate", delete: "Delete profile", noKey: "No key", cancel: "Cancel",
-      capture: "Press the key for {name}", notAllowed: "{key} can't be used. Try another key.",
-      saving: "Saving…", saved: "Saved", saveError: "Couldn't save",
-      phones0: "No phone connected", phones1: "1 phone connected", phonesN: "{n} phones connected",
-      serverDown: "Phone Joystick isn't running",
-      confirmDelete: "Delete the “{name}” profile?", confirmReset: "Go back to the built-in profiles? Your profiles and changes will be lost.",
-      deleteOk: "Delete", resetOk: "Go back to built-in", newName: "Profile {n}", copy: "{name} (copy)",
-      up: "stick up", down: "stick down", left: "stick left", right: "stick right",
-    },
-  }[lang];
-  const fill = (text, values) => text.replace(/\{(\w+)\}/g, (_, k) => values[k]);
+  const PJ = window.PJ;
+  const { t, keyLabel, layoutLabel } = PJ;
 
   const LETTERS = { a: "A", b: "B", x: "X", y: "Y" };
   const PLAYSTATION = { a: "✕", b: "○", x: "□", y: "△" };
@@ -50,12 +22,20 @@
 
   const $ = (id) => document.getElementById(id);
   const chips = [...document.querySelectorAll(".chip")];
-  let layouts = {}, active = "", current = "", supported = new Set();
+  let layouts = {}, active = "", current = "", supported = new Set(), langChoice = "";
   let capturing = null, dirty = false, saving = false, saveTimer = null;
 
-  document.documentElement.lang = lang;
-  document.title = `Phone Joystick · ${T.title}`;
-  for (const el of document.querySelectorAll("[data-text]")) el.textContent = T[el.dataset.text];
+  function translate() {
+    document.title = `Phone Joystick · ${t("title")}`;
+    for (const el of document.querySelectorAll("[data-text]")) el.textContent = t(el.dataset.text);
+    $("langs").setAttribute("aria-label", t("language"));
+    $("profile-name").setAttribute("aria-label", t("profiles"));
+    for (const b of document.querySelectorAll("[data-lang]")) {
+      b.setAttribute("aria-checked", String(b.dataset.lang === PJ.lang));
+    }
+  }
+  PJ.setLang("");
+  translate();
 
   async function api(method, path, body) {
     const res = await fetch(path, {
@@ -70,7 +50,7 @@
   const layout = () => layouts[current];
 
   function controlName(control) {
-    if (control in STICK.arrows) return T[control];
+    if (control in STICK.arrows) return t(control);
     if (control in LETTERS) return layout().names?.[control] || LETTERS[control];
     return { l1: "L1", r1: "R1", start: "Start", select: "Select" }[control];
   }
@@ -78,6 +58,9 @@
   function load(data) {
     layouts = data.layouts;
     active = data.active;
+    langChoice = data.lang;
+    PJ.setLang(data.lang);
+    translate();
     supported = new Set(data.keys);
     if (!(current in layouts)) current = active;
     showPhones(data.phones);
@@ -86,7 +69,7 @@
 
   function showPhones(n) {
     $("phones").dataset.state = n ? "on" : "off";
-    $("phones-text").textContent = n == null ? T.serverDown : n === 0 ? T.phones0 : n === 1 ? T.phones1 : fill(T.phonesN, { n });
+    $("phones-text").textContent = n == null ? t("serverDown") : n === 0 ? t("phones0") : n === 1 ? t("phones1") : t("phonesN", { n });
   }
 
   function setStatus(text, error = false) {
@@ -108,7 +91,7 @@
       if (id === active) {
         const tag = document.createElement("span");
         tag.className = "tag";
-        tag.textContent = T.inUse;
+        tag.textContent = t("inUse");
         b.append(tag);
       }
       b.addEventListener("click", () => { endCapture(); current = id; render(); });
@@ -118,7 +101,6 @@
 
     const nameInput = $("profile-name");
     if (document.activeElement !== nameInput) nameInput.value = layoutLabel(current, l.label);
-    nameInput.setAttribute("aria-label", T.profiles);
     $("in-use").hidden = current !== active;
     $("use-profile").hidden = current === active;
     $("delete").disabled = Object.keys(layouts).length < 2;
@@ -130,7 +112,7 @@
       chip.querySelector(".key").textContent = key ? keyLabel(key) : "—";
       chip.classList.toggle("empty", !key);
       chip.classList.toggle("capturing", control === capturing);
-      chip.setAttribute("aria-label", `${controlName(control)}: ${key ? keyLabel(key) : T.noKey}`);
+      chip.setAttribute("aria-label", `${controlName(control)}: ${key ? keyLabel(key) : t("noKey")}`);
       const name = chip.querySelector(".name");
       if (name && control in LETTERS) name.textContent = controlName(control);
     }
@@ -143,17 +125,18 @@
       b.setAttribute("aria-checked", String((l.style || "") === b.dataset.style));
     }
 
-    const sprint = $("sprint");
-    const options = [["", T.nothing], ...SPRINT_CONTROLS.filter((c) => l.keys[c])
-      .map((c) => [c, `${controlName(c)} (${keyLabel(l.keys[c])})`])];
-    sprint.replaceChildren(...options.map(([value, text]) => new Option(text, value)));
-    sprint.value = l.stickSprint || "";
+    const runnable = SPRINT_CONTROLS.filter((c) => l.keys[c]);
+    $("football").checked = Boolean(l.stickSprint);
+    $("football").disabled = !runnable.length;
+    $("run-row").hidden = !l.stickSprint;
+    $("sprint").replaceChildren(...runnable.map((c) => new Option(`${controlName(c)} (${keyLabel(l.keys[c])})`, c)));
+    $("sprint").value = l.stickSprint || "";
   }
 
   function changed() {
     dirty = true;
     render();
-    setStatus(T.saving);
+    setStatus(t("saving"));
     clearTimeout(saveTimer);
     saveTimer = setTimeout(save, 300);
   }
@@ -164,10 +147,10 @@
     try {
       const data = await api("PUT", "/api/profiles", { layouts, active });
       showPhones(data.phones);
-      setStatus(T.saved);
+      setStatus(t("saved"));
     } catch {
       dirty = true;
-      setStatus(T.saveError, true);
+      setStatus(t("saveError"), true);
     }
     saving = false;
   }
@@ -177,7 +160,8 @@
     if (dirty || saving || capturing) return;
     try {
       const data = await api("GET", "/api/profiles");
-      if (data.active !== active || JSON.stringify(data.layouts) !== JSON.stringify(layouts)) load(data);
+      if (data.active !== active || data.lang !== langChoice
+          || JSON.stringify(data.layouts) !== JSON.stringify(layouts)) load(data);
       else showPhones(data.phones);
     } catch {
       showPhones(null);
@@ -198,7 +182,7 @@
   function startCapture(control) {
     capturing = control;
     $("capture").hidden = false;
-    $("capture-text").textContent = fill(T.capture, { name: controlName(control) });
+    $("capture-text").textContent = t("capture", { name: controlName(control) });
     $("capture-text").classList.remove("error");
     render();
   }
@@ -228,7 +212,7 @@
     if (key && supported.has(key) && !e.ctrlKey && !e.altKey && !e.metaKey) return setKey(capturing, key);
     const pressed = [e.ctrlKey && "Ctrl", e.altKey && "Alt", e.metaKey && "Cmd"].filter(Boolean);
     if (!pressed.length || !["Control", "Alt", "Meta"].includes(e.key)) pressed.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
-    $("capture-text").textContent = fill(T.notAllowed, { key: [...new Set(pressed)].join("+") });
+    $("capture-text").textContent = t("notAllowed", { key: [...new Set(pressed)].join("+") });
     $("capture-text").classList.add("error");
   }, true);
 
@@ -251,7 +235,7 @@
 
   $("new-profile").addEventListener("click", () => {
     const id = newId();
-    layouts[id] = { label: uniqueName(fill(T.newName, { n: Object.keys(layouts).length + 1 })), keys: { ...NEW_KEYS } };
+    layouts[id] = { label: uniqueName(t("newName", { n: Object.keys(layouts).length + 1 })), keys: { ...NEW_KEYS } };
     current = id;
     changed();
     $("profile-name").focus();
@@ -261,7 +245,7 @@
   $("duplicate").addEventListener("click", () => {
     const id = newId();
     const copy = structuredClone(layout());
-    copy.label = uniqueName(fill(T.copy, { name: layoutLabel(current, copy.label) }));
+    copy.label = uniqueName(t("copy", { name: layoutLabel(current, copy.label) }));
     layouts[id] = copy;
     current = id;
     changed();
@@ -279,7 +263,7 @@
 
   $("delete").addEventListener("click", async () => {
     const name = layoutLabel(current, layout().label);
-    if (!(await confirm(fill(T.confirmDelete, { name }), T.deleteOk))) return;
+    if (!(await confirm(t("confirmDelete", { name }), t("deleteOk")))) return;
     delete layouts[current];
     if (!(active in layouts)) active = Object.keys(layouts)[0];
     current = active;
@@ -287,15 +271,15 @@
   });
 
   $("reset").addEventListener("click", async () => {
-    if (!(await confirm(T.confirmReset, T.resetOk))) return;
+    if (!(await confirm(t("confirmReset"), t("resetOk")))) return;
     clearTimeout(saveTimer);
     try {
       load(await api("POST", "/api/profiles/reset"));
       current = active;
       render();
-      setStatus(T.saved);
+      setStatus(t("saved"));
     } catch {
-      setStatus(T.saveError, true);
+      setStatus(t("saveError"), true);
     }
   });
 
@@ -310,11 +294,23 @@
       changed();
     });
   }
-  $("sprint").addEventListener("change", (e) => {
-    if (e.target.value) layout().stickSprint = e.target.value;
-    else delete layout().stickSprint;
+  $("football").addEventListener("change", (e) => {
+    const l = layout();
+    if (e.target.checked) l.stickSprint = l.keys.r1 ? "r1" : SPRINT_CONTROLS.find((c) => l.keys[c]);
+    else delete l.stickSprint;
     changed();
   });
+  $("sprint").addEventListener("change", (e) => { layout().stickSprint = e.target.value; changed(); });
+
+  for (const b of document.querySelectorAll("[data-lang]")) {
+    b.addEventListener("click", async () => {
+      try {
+        load(await api("POST", "/api/lang", { lang: b.dataset.lang }));
+      } catch {
+        setStatus(t("saveError"), true);
+      }
+    });
+  }
 
   api("GET", "/api/profiles").then(load, () => showPhones(null));
   setInterval(poll, 2000);

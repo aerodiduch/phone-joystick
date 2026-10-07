@@ -13,6 +13,11 @@
     <h1>Phone Joystick</h1>
     <span class="phones" id="phones" data-state="off"><span class="dot"></span><span id="phones-text"></span></span>
     <span class="save-status" id="save-status" role="status"></span>
+    <div class="langs" id="langs" role="radiogroup">
+      <button role="radio" data-lang="es" title="Español"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#74acdf"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.2" fill="#f6b40e"/></svg><span>ES</span></button>
+      <button role="radio" data-lang="pt" title="Português"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#009c3b"/><polygon points="15,2.5 27,10 15,17.5 3,10" fill="#ffdf00"/><circle cx="15" cy="10" r="4.2" fill="#002776"/></svg><span>PT</span></button>
+      <button role="radio" data-lang="en" title="English"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#fff"/><g fill="#b22234"><rect width="30" height="2.86"/><rect y="5.71" width="30" height="2.86"/><rect y="11.43" width="30" height="2.86"/><rect y="17.14" width="30" height="2.86"/></g><rect width="13" height="11.43" fill="#3c3b6e"/></svg><span>EN</span></button>
+    </div>
   </header>
 
   <main class="layout">
@@ -75,8 +80,15 @@
             <button role="radio" data-style="playstation">✕ ○ □ △</button>
           </div>
         </div>
-        <div class="option">
-          <label class="option-label" for="sprint" data-text="sprint"></label>
+        <div class="option football">
+          <div class="option-text">
+            <label class="option-label" for="football" data-text="football"></label>
+            <p class="option-help" data-text="footballHelp"></p>
+          </div>
+          <input class="switch" type="checkbox" role="switch" id="football">
+        </div>
+        <div class="option" id="run-row">
+          <label class="option-label" for="sprint" data-text="runButton"></label>
           <select class="select" id="sprint"></select>
         </div>
       </div>

@@ -181,18 +181,18 @@ async def test_playstation_layout(browser, base_url, keyboard):
     await touch(cdp, "touchEnd", {})
     assert await held(keyboard) == set()
 
-    # Pushing past the stick's ring sprints (R1 = E), with hysteresis; arrows never sprints.
+    # Football mode: the stick at the edge of its ring also holds R1 (E); arrows never sprints.
     await touch(cdp, "touchStart", {1: (sx, sy)})
-    await touch(cdp, "touchMove", {1: (sx + 55, sy)})       # 0.92 of the radius: run
+    await touch(cdp, "touchMove", {1: (sx + 48, sy)})       # 0.8 of the radius: run
     assert await held(keyboard) == {"right"}
-    await touch(cdp, "touchMove", {1: (sx + 90, sy)})       # 1.5: sprint
+    await touch(cdp, "touchMove", {1: (sx + 90, sy)})       # past the edge: sprint
     assert await held(keyboard) == {"right", "e"}
     assert await page.locator("#stick-zone.sprint").count() == 1
     assert await page.locator(".shoulder.r1.auto").count() == 1
     assert await page.locator(".shoulder.r1").evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(90, 200, 250)"
-    await touch(cdp, "touchMove", {1: (sx + 72, sy - 4)})   # 1.2: still sprinting
+    await touch(cdp, "touchMove", {1: (sx + 54, sy - 4)})   # 0.9: still sprinting (hysteresis)
     assert await held(keyboard) == {"right", "e"}
-    await touch(cdp, "touchMove", {1: (sx + 60, sy)})       # 1.0: back to running
+    await touch(cdp, "touchMove", {1: (sx + 45, sy)})       # 0.75: back to running
     assert await held(keyboard) == {"right"}
     assert await page.locator("#stick-zone.sprint").count() == 0
     assert await page.locator(".shoulder.r1.auto").count() == 0
@@ -277,3 +277,16 @@ async def test_english_phone_gets_english_labels(browser, base_url):
     await choose_layout(page, "PlayStation")
     assert await page.locator('[data-control="select"] .key').text_content() == "Backspace"
     assert await page.get_by_role("radio", name="Arrows").count() == 1
+
+
+async def test_language_chosen_on_the_computer_reaches_the_phone(browser, base_url, app):
+    page, _ = await open_phone(browser, base_url, VIEWPORTS["iphone-15-landscape"], locale="es-AR")
+    assert await page.locator("#status-text").text_content() == "Conectado"
+    app[server.HUB].lang = "pt"
+    await server.broadcast(app)
+    await page.wait_for_function("document.querySelector('[data-control=select] .key') && document.documentElement.lang === 'pt'")
+    await page.wait_for_function("document.getElementById('status-text').textContent === 'Conectado'")
+    assert await page.get_by_role("radio", name="Setas").count() == 1
+    await choose_layout(page, "PlayStation")
+    assert await page.locator('[data-control="select"] .key').text_content() == "Apagar"
+    assert await page.locator('[data-control="start"] .key').text_content() == "Espaço"

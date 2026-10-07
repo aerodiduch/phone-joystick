@@ -155,16 +155,44 @@ async def test_style_stick_preset_and_sprint(browser, base, app):
     assert {c: profiles(app)["arrows"]["keys"][c] for c in ("up", "down", "left", "right")} == \
         {"up": "w", "down": "s", "left": "a", "right": "d"}
 
-    # Sprint can only press a control that has a key.
+    # Football mode is a switch; the run button can only be one that has a key.
+    assert not await setup.is_checked("#football")
+    assert not await setup.locator("#run-row").is_visible()
+    await setup.click("#football")
+    await saved(setup)
+    assert profiles(app)["arrows"]["stickSprint"] == "a"          # Arrows has no R1: first button with a key
     options = await setup.locator("#sprint option").all_text_contents()
-    assert options[0] == "Nada" and not any(o.startswith("R1") for o in options)
+    assert not any(o.startswith("R1") for o in options)
     await setup.select_option("#sprint", "x")
     await saved(setup)
     assert profiles(app)["arrows"]["stickSprint"] == "x"
+    await setup.click("#football")
+    await saved(setup)
+    assert "stickSprint" not in profiles(app)["arrows"]
+    await setup.click("#football")
+    await saved(setup)
 
     await setup.click("#use-profile")
     await saved(setup)
     await phone.wait_for_function("document.querySelector('[data-control=x] .name').textContent === '□'")
+
+
+async def test_flags_switch_the_language_everywhere(browser, base, app, tmp_path):
+    setup, phone = await open_setup(browser, base), await open_phone(browser, base)
+    assert await setup.locator("[data-lang=es]").get_attribute("aria-checked") == "true"
+
+    await setup.click("[data-lang=pt]")
+    await setup.wait_for_function("document.querySelector('.profiles h2').textContent === 'Perfis'")
+    assert await setup.locator("#new-profile").text_content() == "Novo perfil"
+    assert await setup.locator("label[for=football]").text_content() == "Modo futebol"
+    assert await setup.locator("[data-lang=pt]").get_attribute("aria-checked") == "true"
+    assert app[server.HUB].lang == "pt"
+    assert server.load_state(app[server.STATE_PATH])["lang"] == "pt"
+    await phone.wait_for_function("document.querySelector('[data-control=start] .key').textContent === 'Espaço'")
+
+    await setup.click("[data-lang=en]")
+    await setup.wait_for_function("document.querySelector('.profiles h2').textContent === 'Profiles'")
+    await phone.wait_for_function("document.querySelector('[data-control=start] .key').textContent === 'Space'")
 
 
 async def test_reset_and_phone_switch_show_up_on_the_setup_page(browser, base, app):

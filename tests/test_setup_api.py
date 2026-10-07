@@ -137,3 +137,15 @@ def test_a_broken_profiles_file_falls_back_to_the_built_in_ones(tmp_path):
     broken.write_text('{"layouts": {"x": {"label": "X", "keys": {"a": "ctrl"}}}}', encoding="utf-8")
     assert server.load_profiles(broken)[0] == LAYOUTS
     assert server.load_profiles(tmp_path / "missing.json")[0] == LAYOUTS
+
+
+async def test_language_is_saved_and_sent_to_phones(client, paths):
+    ws = await client.ws_connect(f"/ws?k={TOKEN}")
+    assert (await ws.receive_json())["lang"] == ""
+    resp = await client.post("/api/lang", headers=HEADERS, json={"lang": "pt"})
+    assert resp.status == 200 and (await resp.json())["lang"] == "pt"
+    assert (await ws.receive_json())["lang"] == "pt"
+    assert server.load_state(paths[0])["lang"] == "pt"
+    assert (await client.post("/api/lang", headers=HEADERS, json={"lang": "fr"})).status == 400
+    assert (await client.post("/api/lang", json={"lang": "es"})).status == 403
+    await ws.close()

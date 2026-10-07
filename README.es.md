@@ -25,6 +25,36 @@ Phone Joystick convierte tu teléfono en un joystick para tu notebook. Está pen
 5. Abrí el juego y hacé clic en su ventana para que quede al frente. Las teclas van a la ventana que esté al frente.
 6. Para elegir tus teclas, abrí la [página de configuración](#página-de-configuración).
 
+### Verificar la descarga
+
+Cada versión muestra el SHA-256 de `phone-joystick.exe` al lado del archivo, y también lo trae en `phone-joystick.exe.sha256`. Calculá el tuyo y comparalo:
+
+```powershell
+Get-FileHash .\phone-joystick.exe -Algorithm SHA256
+```
+
+(En `cmd`, `certutil -hashfile phone-joystick.exe SHA256` da el mismo valor.) Si no coinciden, no abras el archivo.
+
+Desde la v0.3.2, cada `.exe` además trae un certificado de GitHub (*attestation*) de que lo armó el workflow de este repositorio a partir de un commit puntual. Con la [CLI de GitHub](https://cli.github.com/):
+
+```powershell
+gh attestation verify .\phone-joystick.exe -R aerodiduch/phone-joystick
+```
+
+### Armar el .exe vos mismo
+
+Si preferís no abrir un archivo que armó otro, armalo desde el código. Necesitás [uv](https://docs.astral.sh/uv/getting-started/installation/) y [Git](https://git-scm.com/download/win), o bajar el código con **Code → Download ZIP**.
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+git clone https://github.com/aerodiduch/phone-joystick
+cd phone-joystick
+uv sync
+uv run pyinstaller --onefile --name phone-joystick --add-data "static;static" --add-data "layouts.json;." server.py
+```
+
+El archivo queda en `dist\phone-joystick.exe`. No tiene por qué dar el mismo SHA-256 que el de la versión publicada; lo que ganás es un `.exe` hecho con código que podés leer. También podés no armar el `.exe` y correr `uv run server.py` desde esa carpeta.
+
 ## macOS
 
 Necesitás [uv](https://docs.astral.sh/uv/getting-started/installation/) (`brew install uv`).

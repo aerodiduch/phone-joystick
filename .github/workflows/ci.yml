@@ -29,6 +29,10 @@ jobs:
   windows-exe:
     needs: test
     runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write       # build provenance attestation
+      attestations: write
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.2.0
@@ -44,12 +48,29 @@ jobs:
           Stop-Process $server.Id
           Get-Content out.txt, err.txt
           if ($page.StatusCode -ne 200 -or $page.Content -notmatch "nipplejs") { exit 1 }
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist\phone-joystick.exe -Algorithm SHA256).Hash.ToLower()
+          Set-Content dist\phone-joystick.exe.sha256 "$hash  phone-joystick.exe" -Encoding ascii
+          "SHA256=$hash" >> $env:GITHUB_ENV
+          $hash
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: phone-joystick-windows
-          path: dist/phone-joystick.exe
+          path: dist/phone-joystick.exe*
+      - name: Attest that the .exe was built here, from this commit
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-path: dist/phone-joystick.exe
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3.0.3
         with:
-          files: dist/phone-joystick.exe
+          files: |
+            dist/phone-joystick.exe
+            dist/phone-joystick.exe.sha256
+          append_body: true
+          body: |
+            SHA-256 of `phone-joystick.exe`: `${{ env.SHA256 }}`

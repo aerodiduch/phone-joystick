@@ -1,6 +1,6 @@
 [project]
 name = "phone-joystick"
-version = "0.3.0"
+version = "0.3.1"
 description = "Use your phone as a joystick for games on your Mac or Windows PC"
 requires-python = ">=3.12"
 license = "MIT"

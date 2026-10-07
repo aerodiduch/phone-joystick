@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/aerodiduch/phone-joystick/actions/workflows/ci.yml/badge.svg)](https://github.com/aerodiduch/phone-joystick/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/aerodiduch/phone-joystick)](https://github.com/aerodiduch/phone-joystick/releases/latest) [![Downloads](https://img.shields.io/github/downloads/aerodiduch/phone-joystick/total)](https://github.com/aerodiduch/phone-joystick/releases) [![License: MIT](https://img.shields.io/github/license/aerodiduch/phone-joystick)](LICENSE) ![Windows | macOS](https://img.shields.io/badge/computer-Windows%20%7C%20macOS-0078D4) ![iPhone | Android](https://img.shields.io/badge/phone-iPhone%20%7C%20Android-34A853) ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)
 
-[Español](README.es.md)
+[Español](README.es.md) · [Português](README.pt.md)
 
 ![A phone used as a gamepad in front of a laptop running a football game](docs/cover.jpg)
 
@@ -10,9 +10,10 @@ Phone Joystick turns your phone into a joystick for your laptop. It's meant for 
 
 - iPhone (Safari) and Android (Chrome). Nothing to install on the phone; you scan a QR code.
 - Windows and macOS.
-- Stick with 8 directions, four face buttons, L1, R1, Start and Select. You choose the key for each one on a setup page, and keep as many profiles as you want.
+- Stick with 8 directions, four face buttons, L1, R1, Start and Select. You choose the key for each one on a [setup page](#setup-page), and keep as many profiles as you want.
 - Several fingers at once, and a finger can slide from one button to the next.
-- Pushing the stick past its ring can also hold a button. The PlayStation profile holds R1, so you sprint while your right thumb passes and shoots.
+- Football mode: pushing the stick to the edge of its circle also holds the run button, so you sprint while your right thumb passes and shoots.
+- In Spanish, Portuguese and English.
 - If the phone locks or the Wi-Fi drops, every key is released within 1.5 seconds.
 
 ## Windows
@@ -22,6 +23,7 @@ Phone Joystick turns your phone into a joystick for your laptop. It's meant for 
 3. When the firewall asks, allow access on **private networks**. Without it, the phone can't reach the computer.
 4. A window opens with a QR code. Scan it with the phone's camera. Phone and computer have to be on the same Wi-Fi.
 5. Open the game and click its window so it's in front. Keys go to whatever window is in front.
+6. To choose your keys, open the [setup page](#setup-page).
 
 ## macOS
 
@@ -35,11 +37,11 @@ uv run server.py
 
 The first time, macOS asks for the **Accessibility** permission for your terminal app (Terminal, iTerm…). It's what lets a program press keys. Turn it on and the server carries on by itself.
 
-Scan the QR code in the terminal with your phone, open the game and click its window.
+Scan the QR code in the terminal with your phone, open the game and click its window. To choose your keys, open the [setup page](#setup-page).
 
 ## Profiles
 
-These three come built in. Switch profiles from the phone; the computer remembers the last one.
+These three come built in, and you can change them or add your own on the setup page. Switch profiles from the phone's top bar; the computer remembers the last one.
 
 | Control | Arrows | WASD | PlayStation |
 | --- | --- | --- | --- |
@@ -52,21 +54,26 @@ These three come built in. Switch profiles from the phone; the computer remember
 | R1 | | | E |
 | Start | Enter | Enter | Space |
 | Select | Esc | Esc | Backspace |
+| Football mode | off | off | on (R1) |
 
-### Your own profiles
+## Setup page
 
-Open `http://localhost:8777/setup` in a browser on the computer that runs Phone Joystick. You see the controller with the key under each control. Click a control and press the key you want; click **No key** to hide it from the phone. Changes are saved as you make them and the phone picks them up right away.
+![The setup page](docs/setup-en.jpg)
 
-From there you can also:
+Open **http://localhost:8777/setup** in a browser on the computer that runs Phone Joystick. The window with the QR code shows this link too. The page only opens on that computer; a phone or another device on the network gets an error.
 
-- create, duplicate, rename and delete profiles, and choose the one the phone uses;
-- set the whole stick to arrows or WASD in one click;
-- switch the buttons between A B X Y and ✕ ○ □ △;
-- choose which button the stick also presses when you push it past its ring, or none.
+- **Keys.** You see the controller with the key under each control. Click a control and press the key you want. **No key** hides that control on the phone.
+- **Profiles.** Create, duplicate, rename and delete them, and pick the one the phone uses with **Use on the phone**.
+- **Stick.** Set the four directions to arrows or WASD in one click, or click each direction and assign it like any other control.
+- **Buttons.** Show them as A B X Y or as ✕ ○ □ △.
+- **Football mode.** On a phone it's hard to hold the run button while you move the stick. With football mode on, pushing the stick to the edge of its circle presses the run button for you, and the button lights up on the phone while it's held. You choose which button runs.
+- **Language.** The flags at the top switch between Spanish, Portuguese and English, on this page and on the phone.
 
-Letters, digits, arrows, Space, Enter, Esc, Tab, Backspace and Shift can be assigned. Ctrl, Alt and Cmd can't, so nobody can send shortcuts to your computer from a phone. The page only opens on that computer, not from the phone or another device on the network.
+Changes save themselves and reach the phone at once, even in the middle of a match, without restarting anything. If you're holding a button when you change its key, the old key is released and the new one pressed.
 
-Profiles are saved in `profiles.json`, next to `server.py` or in `%APPDATA%\phone-joystick\` with the `.exe`. **Go back to the built-in profiles** at the bottom of the list restores the original three.
+Letters, digits, arrows, Space, Enter, Esc, Tab, Backspace and Shift can be assigned. Ctrl, Alt and Cmd can't, so nobody can send shortcuts to your computer from a phone.
+
+Your profiles are saved in `profiles.json`, next to `server.py`, or in `%APPDATA%\phone-joystick\` with the `.exe`. **Go back to the built-in profiles**, below the list, restores the original three.
 
 ## If something doesn't work
 

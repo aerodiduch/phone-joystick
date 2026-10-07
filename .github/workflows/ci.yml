@@ -52,7 +52,8 @@ jobs:
         shell: pwsh
         run: |
           $hash = (Get-FileHash dist\phone-joystick.exe -Algorithm SHA256).Hash.ToLower()
-          Set-Content dist\phone-joystick.exe.sha256 "$hash  phone-joystick.exe" -Encoding ascii
+          # LF, not CRLF: `sha256sum -c` / `shasum -c` on Linux and macOS choke on the \r
+          [IO.File]::WriteAllText("dist\phone-joystick.exe.sha256", "$hash  phone-joystick.exe`n")
           "SHA256=$hash" >> $env:GITHUB_ENV
           $hash
       - uses: actions/upload-artifact@v7.0.1

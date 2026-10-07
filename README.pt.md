@@ -10,8 +10,8 @@ O Phone Joystick transforma o seu celular em um controle para o seu notebook. El
 
 - iPhone (Safari) e Android (Chrome). Não precisa instalar nada no celular; é só escanear um QR code.
 - Windows e macOS.
-- Direcional ou analógico, à escolha pela barra de cima do celular, mais quatro botões, L1, R1, Start e Select. A tecla de cada um é escolhida na [página de configuração](#página-de-configuração), e você pode ter quantos perfis quiser.
-- Modo futebol: quando você leva o dedo um pouco além da borda do direcional ou do analógico, o botão de correr também é apertado, assim você corre enquanto o polegar direito passa e chuta.
+- D-pad ou analógico, à escolha pela barra de cima do celular, mais quatro botões, L1, R1, Start e Select. A tecla de cada um é escolhida na [página de configuração](#página-de-configuração), e você pode ter quantos perfis quiser.
+- Modo futebol: quando você leva o dedo um pouco além da borda do D-pad ou do analógico, o botão de correr também é apertado, assim você corre enquanto o polegar direito passa e chuta.
 - Em espanhol, português e inglês.
 - Vários dedos ao mesmo tempo, e um dedo pode deslizar de um botão para o outro.
 - Se o celular bloquear ou o Wi-Fi cair, todas as teclas são soltas em menos de 1,5 segundo.
@@ -64,9 +64,9 @@ Abra **http://localhost:8777/setup** em um navegador do computador onde o Phone 
 
 - **Teclas.** Você vê o controle com a tecla embaixo de cada botão. Clique em um botão e aperte a tecla que quiser. **Sem tecla** tira esse botão do celular.
 - **Perfis.** Você pode criar, duplicar, renomear e apagar perfis, e escolher qual o celular usa com **Usar no celular**.
-- **Direções.** Coloque nas setas ou em WASD com um clique, ou clique em cada uma e escolha a tecla como em qualquer outro botão. O direcional e o analógico usam as mesmas teclas.
+- **Direções.** Coloque nas setas ou em WASD com um clique, ou clique em cada uma e escolha a tecla como em qualquer outro botão. O D-pad e o analógico usam as mesmas teclas.
 - **Botões.** Aparecem como A B X Y ou como ✕ ○ □ △.
-- **Modo futebol.** No celular é difícil apertar o botão de correr enquanto você se move. Com o modo futebol ligado, quando você leva o dedo um pouco além da borda do direcional ou do círculo do analógico, o botão de correr é apertado sozinho, e o botão acende no celular enquanto está apertado. Você escolhe qual é o botão de correr.
+- **Modo futebol.** No celular é difícil apertar o botão de correr enquanto você se move. Com o modo futebol ligado, quando você leva o dedo um pouco além da borda do D-pad ou do círculo do analógico, o botão de correr é apertado sozinho, e o botão acende no celular enquanto está apertado. Você escolhe qual é o botão de correr.
 - **Idioma.** As bandeirinhas de cima trocam entre espanhol, português e inglês, nesta página e no celular.
 - **Vibração.** O celular vibra de leve quando você toca um botão (no iPhone, vibra quando você levanta o dedo; o Safari não deixa antes). Dá para desligar em **No celular**.
 

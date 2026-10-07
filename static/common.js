@@ -3,14 +3,14 @@ window.PJ = (() => {
   const LANGS = ["es", "pt", "en"];
   const STRINGS = {
     es: {
-      dpad: "Cruceta", analog: "Analógico", leftControl: "Control izquierdo",
+      dpad: "D-pad", analog: "Analógico", leftControl: "Control izquierdo",
       phoneSettings: "En el teléfono", vibrate: "Vibrar al tocar un botón",
       on: "Conectado", off: "Sin conexión", profile: "Perfil", key_space: "Espacio", key_backspace: "Borrar",
       arrows: "Flechas", language: "Idioma",
       title: "Configuración", profiles: "Perfiles", newProfile: "Nuevo perfil", reset: "Volver a los perfiles de fábrica",
       inUse: "En uso", use: "Usar en el teléfono", stick: "Direcciones", buttons: "Botones",
       football: "Modo fútbol",
-      footballHelp: "En el teléfono cuesta apretar el botón de correr mientras te movés. Con el modo fútbol, cuando llevás el dedo un poco más allá del borde de la cruceta o del círculo del analógico, el botón de correr se aprieta solo.",
+      footballHelp: "En el teléfono cuesta apretar el botón de correr mientras te movés. Con el modo fútbol, cuando llevás el dedo un poco más allá del borde del D-pad o del círculo del analógico, el botón de correr se aprieta solo.",
       runButton: "Botón de correr", duplicate: "Duplicar", delete: "Borrar perfil", noKey: "Sin tecla", cancel: "Cancelar",
       capture: "Apretá la tecla para {name}", notAllowed: "{key} no se puede usar. Probá con otra tecla.",
       saving: "Guardando…", saved: "Guardado", saveError: "No se pudo guardar",
@@ -22,14 +22,14 @@ window.PJ = (() => {
       up: "stick arriba", down: "stick abajo", left: "stick a la izquierda", right: "stick a la derecha",
     },
     pt: {
-      dpad: "Direcional", analog: "Analógico", leftControl: "Controle esquerdo",
+      dpad: "D-pad", analog: "Analógico", leftControl: "Controle esquerdo",
       phoneSettings: "No celular", vibrate: "Vibrar ao tocar um botão",
       on: "Conectado", off: "Sem conexão", profile: "Perfil", key_space: "Espaço", key_backspace: "Apagar",
       arrows: "Setas", language: "Idioma",
       title: "Configuração", profiles: "Perfis", newProfile: "Novo perfil", reset: "Voltar aos perfis originais",
       inUse: "Em uso", use: "Usar no celular", stick: "Direções", buttons: "Botões",
       football: "Modo futebol",
-      footballHelp: "No celular é difícil apertar o botão de correr enquanto você se move. Com o modo futebol, quando você leva o dedo um pouco além da borda do direcional ou do círculo do analógico, o botão de correr é apertado sozinho.",
+      footballHelp: "No celular é difícil apertar o botão de correr enquanto você se move. Com o modo futebol, quando você leva o dedo um pouco além da borda do D-pad ou do círculo do analógico, o botão de correr é apertado sozinho.",
       runButton: "Botão de correr", duplicate: "Duplicar", delete: "Apagar perfil", noKey: "Sem tecla", cancel: "Cancelar",
       capture: "Aperte a tecla para {name}", notAllowed: "{key} não pode ser usada. Tente outra tecla.",
       saving: "Salvando…", saved: "Salvo", saveError: "Não foi possível salvar",

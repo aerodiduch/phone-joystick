@@ -339,7 +339,7 @@ async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, ap
 async def test_dpad_is_the_default_and_the_switch_remembers_analog(browser, base_url, keyboard, app):
     page, cdp = await open_phone(browser, base_url, VIEWPORTS["iphone-15-landscape"], left=None)
     assert await page.locator("#dpad-zone").is_visible() and not await page.locator("#stick-zone").is_visible()
-    assert await page.get_by_role("radio", name="Cruceta").get_attribute("aria-checked") == "true"
+    assert await page.get_by_role("radio", name="D-pad").get_attribute("aria-checked") == "true"
 
     box = await page.locator("#dpad").bounding_box()
     cx, cy, half = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, box["width"] / 2

@@ -6,13 +6,13 @@
 
 ![Un teléfono usado como joystick frente a una notebook con un juego de fútbol](docs/cover.jpg)
 
-Phone Joystick convierte tu teléfono en un joystick para tu notebook. Está pensado para cuando no tenés tu setup a mano: en la oficina, en un hotel, de vacaciones. Escaneás un código QR con el teléfono y jugás. El teléfono muestra un stick y botones en el navegador, y la computadora convierte cada toque en una tecla, así que anda con cualquier juego que se juegue con teclado. Lo hice para jugar al [PES 6 Web](https://pes6.optijuegos.net/) en el navegador de la notebook, en el trabajo, y el esquema PlayStation usa las teclas que configuré en ese juego.
+Phone Joystick convierte tu teléfono en un joystick para tu notebook. Está pensado para cuando no tenés tu setup a mano: en la oficina, en un hotel, de vacaciones. Escaneás un código QR con el teléfono y jugás. El teléfono muestra un stick y botones en el navegador, y la computadora convierte cada toque en una tecla, así que anda con cualquier juego que se juegue con teclado. Lo hice para jugar al [PES 6 Web](https://pes6.optijuegos.net/) en el navegador de la notebook, en el trabajo, y el perfil PlayStation usa las teclas que configuré en ese juego.
 
 - iPhone (Safari) y Android (Chrome). En el teléfono no se instala nada; se escanea un código QR.
 - Windows y macOS.
-- Stick de 8 direcciones, cuatro botones, Start y Select. El esquema PlayStation suma L1 y R1 y los símbolos ✕ ○ □ △.
+- Stick de 8 direcciones, cuatro botones, L1, R1, Start y Select. La tecla de cada uno se elige en una página de configuración, y podés tener todos los perfiles que quieras.
 - Varios dedos a la vez, y un dedo puede deslizarse de un botón al otro.
-- En el esquema PlayStation, si llevás el stick más allá del aro también se aprieta R1, así corrés mientras el pulgar derecho pasa y patea.
+- Llevar el stick más allá del aro puede apretar también un botón. El perfil PlayStation aprieta R1, así corrés mientras el pulgar derecho pasa y patea.
 - Si el teléfono se bloquea o se corta la Wi-Fi, todas las teclas se sueltan en menos de 1,5 segundos.
 
 ## Windows
@@ -37,9 +37,9 @@ La primera vez, macOS pide el permiso de **Accesibilidad** para la app de termin
 
 Escaneá el QR de la terminal con el teléfono, abrí el juego y hacé clic en su ventana.
 
-## Esquemas de teclas
+## Perfiles
 
-El esquema se cambia desde el teléfono y la computadora recuerda el último.
+Estos tres vienen de fábrica. El perfil se cambia desde el teléfono y la computadora recuerda el último.
 
 | Control | Flechas | WASD | PlayStation |
 | --- | --- | --- | --- |
@@ -53,21 +53,20 @@ El esquema se cambia desde el teléfono y la computadora recuerda el último.
 | Start | Enter | Enter | Espacio |
 | Select | Esc | Esc | Borrar |
 
-### Tus propias teclas
+### Tus propios perfiles
 
-Los esquemas están en `layouts.json`. Si lo corrés desde el código, editá el del repo. Con el `.exe`, copialo a `%APPDATA%\phone-joystick\layouts.json` y editá esa copia. Después de cambiarlo, reinicialo.
+Abrí `http://localhost:8777/setup` en un navegador de la computadora donde corre Phone Joystick. Vas a ver el control con la tecla debajo de cada botón. Hacé clic en un botón y apretá la tecla que quieras; con **Sin tecla** lo sacás del teléfono. Los cambios se guardan solos y el teléfono los toma en el momento.
 
-```json
-"carreras": {
-  "label": "Carreras",
-  "keys": { "up": "w", "down": "s", "left": "a", "right": "d", "a": "space", "start": "escape" }
-}
-```
+Desde ahí también podés:
 
-Controles: `up`, `down`, `left`, `right`, `a`, `b`, `x`, `y`, `l1`, `r1`, `start`, `select`. Los que no pongas no aparecen en el teléfono.
-Teclas: letras, números, flechas (`up`, `down`, `left`, `right`), `space`, `enter`, `escape`, `tab`, `backspace` y `shift`. Ctrl, Alt y Cmd no se permiten, así nadie puede mandarle atajos a tu computadora desde un teléfono.
+- crear, duplicar, renombrar y borrar perfiles, y elegir cuál usa el teléfono;
+- poner todo el stick en flechas o en WASD con un clic;
+- cambiar los botones entre A B X Y y ✕ ○ □ △;
+- elegir qué botón aprieta también el stick cuando pasás el aro, o ninguno.
 
-`"names"` cambia lo que muestran los botones (el esquema PlayStation lo usa para ✕ ○ □ △), y `"stickSprint": "r1"` hace que el stick apriete R1 cuando pasás el aro.
+Se pueden asignar letras, números, flechas, Espacio, Enter, Esc, Tab, Borrar y Shift. Ctrl, Alt y Cmd no, así nadie puede mandarle atajos a tu computadora desde un teléfono. La página se abre solo en esa computadora, no desde el teléfono ni desde otro equipo de la red.
+
+Los perfiles se guardan en `profiles.json`, al lado de `server.py` o en `%APPDATA%\phone-joystick\` con el `.exe`. **Volver a los perfiles de fábrica**, abajo de la lista, recupera los tres originales.
 
 ## Si algo no anda
 

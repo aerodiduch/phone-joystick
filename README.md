@@ -6,13 +6,13 @@
 
 ![A phone used as a gamepad in front of a laptop running a football game](docs/cover.jpg)
 
-Phone Joystick turns your phone into a joystick for your laptop. It's meant for when you're away from your setup: at the office, in a hotel room, on vacation. Scan a QR code with your phone and play. The phone shows a stick and buttons in its browser, and the computer turns each touch into a key press, so any game you play with the keyboard works. I built it to play [PES 6 Web](https://pes6.optijuegos.net/) in my laptop's browser at work, and the PlayStation layout uses the keys I set up in that game.
+Phone Joystick turns your phone into a joystick for your laptop. It's meant for when you're away from your setup: at the office, in a hotel room, on vacation. Scan a QR code with your phone and play. The phone shows a stick and buttons in its browser, and the computer turns each touch into a key press, so any game you play with the keyboard works. I built it to play [PES 6 Web](https://pes6.optijuegos.net/) in my laptop's browser at work, and the PlayStation profile uses the keys I set up in that game.
 
 - iPhone (Safari) and Android (Chrome). Nothing to install on the phone; you scan a QR code.
 - Windows and macOS.
-- Stick with 8 directions, four face buttons, Start and Select. The PlayStation layout adds L1 and R1 and the ✕ ○ □ △ symbols.
+- Stick with 8 directions, four face buttons, L1, R1, Start and Select. You choose the key for each one on a setup page, and keep as many profiles as you want.
 - Several fingers at once, and a finger can slide from one button to the next.
-- In the PlayStation layout, pushing the stick past its ring also holds R1, so you can sprint while your right thumb passes and shoots.
+- Pushing the stick past its ring can also hold a button. The PlayStation profile holds R1, so you sprint while your right thumb passes and shoots.
 - If the phone locks or the Wi-Fi drops, every key is released within 1.5 seconds.
 
 ## Windows
@@ -37,9 +37,9 @@ The first time, macOS asks for the **Accessibility** permission for your termina
 
 Scan the QR code in the terminal with your phone, open the game and click its window.
 
-## Layouts
+## Profiles
 
-Switch layouts from the phone. The computer remembers the last one.
+These three come built in. Switch profiles from the phone; the computer remembers the last one.
 
 | Control | Arrows | WASD | PlayStation |
 | --- | --- | --- | --- |
@@ -53,21 +53,20 @@ Switch layouts from the phone. The computer remembers the last one.
 | Start | Enter | Enter | Space |
 | Select | Esc | Esc | Backspace |
 
-### Your own keys
+### Your own profiles
 
-Layouts live in `layouts.json`. Running from source, edit the one in the repo. With the `.exe`, copy it to `%APPDATA%\phone-joystick\layouts.json` and edit that copy. Restart after changing it.
+Open `http://localhost:8777/setup` in a browser on the computer that runs Phone Joystick. You see the controller with the key under each control. Click a control and press the key you want; click **No key** to hide it from the phone. Changes are saved as you make them and the phone picks them up right away.
 
-```json
-"racing": {
-  "label": "Racing",
-  "keys": { "up": "w", "down": "s", "left": "a", "right": "d", "a": "space", "start": "escape" }
-}
-```
+From there you can also:
 
-Controls: `up`, `down`, `left`, `right`, `a`, `b`, `x`, `y`, `l1`, `r1`, `start`, `select`. Controls left out don't show on the phone.
-Keys: letters, digits, arrows (`up`, `down`, `left`, `right`), `space`, `enter`, `escape`, `tab`, `backspace` and `shift`. Ctrl, Alt and Cmd aren't allowed, so nobody can send shortcuts to your computer from a phone.
+- create, duplicate, rename and delete profiles, and choose the one the phone uses;
+- set the whole stick to arrows or WASD in one click;
+- switch the buttons between A B X Y and ✕ ○ □ △;
+- choose which button the stick also presses when you push it past its ring, or none.
 
-`"names"` changes what the buttons show (the PlayStation layout uses it for ✕ ○ □ △), and `"stickSprint": "r1"` makes the stick hold R1 when pushed past its ring.
+Letters, digits, arrows, Space, Enter, Esc, Tab, Backspace and Shift can be assigned. Ctrl, Alt and Cmd can't, so nobody can send shortcuts to your computer from a phone. The page only opens on that computer, not from the phone or another device on the network.
+
+Profiles are saved in `profiles.json`, next to `server.py` or in `%APPDATA%\phone-joystick\` with the `.exe`. **Go back to the built-in profiles** at the bottom of the list restores the original three.
 
 ## If something doesn't work
 

@@ -292,10 +292,15 @@ async def test_language_chosen_on_the_computer_reaches_the_phone(browser, base_u
     assert await page.locator('[data-control="start"] .key').text_content() == "Espaço"
 
 
+IPHONE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 "
+             "(KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1")
+
+
 @pytest.mark.parametrize("platform", ["android", "iphone"])
-async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, app, platform):
-    ctx = await browser.new_context(viewport={"width": 852, "height": 393}, is_mobile=True, has_touch=True)
-    # Android: navigator.vibrate. iPhone Safari has none, so the page clicks a hidden switch.
+async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, app, keyboard, platform):
+    ctx = await browser.new_context(viewport={"width": 852, "height": 393}, is_mobile=True, has_touch=True,
+                                    user_agent=IPHONE_UA if platform == "iphone" else None)
+    # Android: navigator.vibrate. iPhone: no vibrate API; the tap itself toggles a hidden switch.
     await ctx.add_init_script("""
         window.buzzes = 0;
         if (%s) delete Navigator.prototype.vibrate;
@@ -306,16 +311,22 @@ async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, ap
     await page.wait_for_function("document.getElementById('status').dataset.state === 'on'")
     cdp = await ctx.new_cdp_session(page)
     count = ("window.buzzes" if platform == "android"
-             else "document.querySelector('.haptic input').checked ? 1 : 0")
+             else "[...document.querySelectorAll('.btn.a .haptic')].filter(t => t.checked).length")
+    assert await page.locator(".haptic").count() == (8 if platform == "iphone" else 0)  # one per button
 
     ax, ay = await center(page, ".btn.a")
+    keyboard.events.clear()
     await touch(cdp, "touchStart", {1: (ax, ay)})
+    await asyncio.sleep(0.1)
     await touch(cdp, "touchEnd", {})
     assert await page.evaluate(count) == 1
+    assert keyboard.events[:1] == [("down", "space")]      # the button still works under the switch
 
     app[server.HUB].haptics = False
     await server.broadcast(app)
     await asyncio.sleep(0.2)
     await touch(cdp, "touchStart", {1: (ax, ay)})
+    await asyncio.sleep(0.1)
     await touch(cdp, "touchEnd", {})
     assert await page.evaluate(count) == 1
+    assert await page.evaluate("document.documentElement.scrollWidth") <= 852

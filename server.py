@@ -220,6 +220,7 @@ async def websocket(request: web.Request) -> web.WebSocketResponse:
     phone = Phone(ws)
     hub.phones.append(phone)
     log.info(TEXT["connected"], request.remote)
+    log.debug("%s", request.headers.get("User-Agent", ""))
     await ws.send_json(hub.config_message())
     try:
         async for msg in ws:

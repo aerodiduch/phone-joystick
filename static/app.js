@@ -29,16 +29,28 @@
   let ws = null, lastPong = 0, lastSent = "";
   let build = null, stickSprint = "", haptics = true;
 
-  // Android vibrates through navigator.vibrate. iPhone Safari (iOS 18+) has no such API, but it
-  // taps the Taptic Engine when a switch checkbox toggles, so a hidden one is clicked instead.
-  const hapticLabel = document.createElement("label");
-  hapticLabel.className = "haptic";
-  hapticLabel.innerHTML = '<input type="checkbox" switch>';
-  document.body.append(hapticLabel);
+  // Android vibrates through navigator.vibrate. iPhone Safari has no such API, but iOS 18 taps the
+  // Taptic Engine when the user toggles a switch checkbox, and only on a real tap: each button gets
+  // an invisible one on top (how the ios-haptics library does it), so on iPhone it buzzes as the
+  // finger lifts.
+  const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (IOS) {
+    for (const el of controls) {
+      const toggle = document.createElement("input");
+      toggle.type = "checkbox";
+      toggle.setAttribute("switch", "");
+      toggle.className = "haptic";
+      toggle.tabIndex = -1;
+      toggle.setAttribute("aria-hidden", "true");
+      el.append(toggle);
+    }
+  }
+  function setHaptics(on) {
+    haptics = on;
+    document.body.classList.toggle("no-haptics", !on);
+  }
   function buzz() {
-    if (!haptics) return;
-    if (navigator.vibrate) navigator.vibrate(12);
-    else hapticLabel.click();
+    if (haptics && !IOS && navigator.vibrate) navigator.vibrate(12);
   }
 
   function connect() {
@@ -76,7 +88,7 @@
     layoutsEl.setAttribute("aria-label", t("profile"));
     document.body.dataset.style = msg.style;
     stickSprint = msg.stickSprint;
-    haptics = msg.haptics !== false;
+    setHaptics(msg.haptics !== false);
     renderProfiles(msg.layouts, msg.layout);
     for (const el of controls) {
       const control = el.dataset.control;
@@ -210,7 +222,10 @@
   window.addEventListener("blur", releaseAll);
 
   // iOS ignores user-scalable=no; cancelling every touchstart is what stops double-tap zoom.
-  document.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  // The iPhone vibration switches must get their tap, so their touches go through.
+  document.addEventListener("touchstart", (e) => {
+    if (!(haptics && e.target.classList.contains("haptic"))) e.preventDefault();
+  }, { passive: false });
   document.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
   document.addEventListener("gesturestart", (e) => e.preventDefault());
   document.addEventListener("contextmenu", (e) => e.preventDefault());

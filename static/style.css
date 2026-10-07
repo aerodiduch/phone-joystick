@@ -294,10 +294,18 @@ button {
   .status-text { display: none; }
 }
 
+.btn, .pill { position: relative; } /* .shoulder is already absolute */
+
+/* Invisible switch over each button: the iPhone vibrates when the finger toggles it. */
 .haptic {
-  position: fixed;
-  top: 0;
-  left: -100px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  pointer-events: none;
+  clip-path: inset(0 round 999px);
+  touch-action: manipulation;
 }
+
+.no-haptics .haptic { display: none; }

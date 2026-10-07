@@ -30,7 +30,15 @@
     for (const el of document.querySelectorAll("[data-text]")) el.textContent = t(el.dataset.text);
     $("langs").setAttribute("aria-label", t("language"));
     $("profile-name").setAttribute("aria-label", t("profiles"));
-    for (const b of document.querySelectorAll("[data-lang]")) {
+    $("vibrate").addEventListener("change", async (e) => {
+    try {
+      load(await api("POST", "/api/settings", { haptics: e.target.checked }));
+    } catch {
+      setStatus(t("saveError"), true);
+    }
+  });
+
+  for (const b of document.querySelectorAll("[data-lang]")) {
       b.setAttribute("aria-checked", String(b.dataset.lang === PJ.lang));
     }
   }
@@ -59,6 +67,7 @@
     layouts = data.layouts;
     active = data.active;
     langChoice = data.lang;
+    $("vibrate").checked = data.haptics;
     PJ.setLang(data.lang);
     translate();
     supported = new Set(data.keys);
@@ -160,7 +169,7 @@
     if (dirty || saving || capturing) return;
     try {
       const data = await api("GET", "/api/profiles");
-      if (data.active !== active || data.lang !== langChoice
+      if (data.active !== active || data.lang !== langChoice || data.haptics !== $("vibrate").checked
           || JSON.stringify(data.layouts) !== JSON.stringify(layouts)) load(data);
       else showPhones(data.phones);
     } catch {
@@ -305,7 +314,7 @@
   for (const b of document.querySelectorAll("[data-lang]")) {
     b.addEventListener("click", async () => {
       try {
-        load(await api("POST", "/api/lang", { lang: b.dataset.lang }));
+        load(await api("POST", "/api/settings", { lang: b.dataset.lang }));
       } catch {
         setStatus(t("saveError"), true);
       }

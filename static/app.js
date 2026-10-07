@@ -4,7 +4,7 @@
   const STICK_SIZE = 120;
   const STICK_ON = 0.3, STICK_OFF = 0.2;     // deflection that engages / releases the stick
   const AXIS_ON = 0.42, AXIS_OFF = 0.34;     // per-axis threshold: 8 sectors of 45°
-  const SPRINT_ON = 0.95, SPRINT_OFF = 0.85; // football mode: finger distance / stick radius
+  const SPRINT_ON = 1.3, SPRINT_OFF = 1.15;  // football mode: finger distance / stick radius, past the ring
   const BUTTON_HIT = 1.15;                   // round buttons react a bit outside their edge
   const PING_MS = 500, PONG_TIMEOUT_MS = 2000;
 
@@ -27,7 +27,19 @@
   let buttons = new Set();
   const pointers = new Map(); // pointerId -> control under that finger, or null
   let ws = null, lastPong = 0, lastSent = "";
-  let build = null, stickSprint = "";
+  let build = null, stickSprint = "", haptics = true;
+
+  // Android vibrates through navigator.vibrate. iPhone Safari (iOS 18+) has no such API, but it
+  // taps the Taptic Engine when a switch checkbox toggles, so a hidden one is clicked instead.
+  const hapticLabel = document.createElement("label");
+  hapticLabel.className = "haptic";
+  hapticLabel.innerHTML = '<input type="checkbox" switch>';
+  document.body.append(hapticLabel);
+  function buzz() {
+    if (!haptics) return;
+    if (navigator.vibrate) navigator.vibrate(12);
+    else hapticLabel.click();
+  }
 
   function connect() {
     const scheme = location.protocol === "https:" ? "wss" : "ws";
@@ -64,6 +76,7 @@
     layoutsEl.setAttribute("aria-label", t("profile"));
     document.body.dataset.style = msg.style;
     stickSprint = msg.stickSprint;
+    haptics = msg.haptics !== false;
     renderProfiles(msg.layouts, msg.layout);
     for (const el of controls) {
       const control = el.dataset.control;
@@ -136,7 +149,7 @@
     const next = new Set();
     const axis = (dir, v) => { if (v > (stick.has(dir) ? AXIS_OFF : AXIS_ON)) next.add(dir); };
     axis("right", ux); axis("left", -ux); axis("up", uy); axis("down", -uy);
-    // Football mode: at the edge of the ring the run control goes down too (Xbox touch guide: joystick actionThreshold).
+    // Football mode: a little past the ring the run control goes down too (Xbox touch guide: joystick actionThreshold).
     const reach = evt.data.raw.distance / (STICK_SIZE / 2);
     if (stickSprint && reach > (stick.has(stickSprint) ? SPRINT_OFF : SPRINT_ON)) next.add(stickSprint);
     zone.classList.toggle("sprint", next.has(stickSprint));
@@ -166,7 +179,9 @@
   }
 
   function updateButtons() {
+    const before = buttons;
     buttons = new Set([...pointers.values()].filter(Boolean));
+    if ([...buttons].some((b) => !before.has(b))) buzz();
     render();
     send();
   }

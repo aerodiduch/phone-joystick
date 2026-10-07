@@ -246,3 +246,12 @@ async def test_setup_page_fits(browser, base, width):
     clipped = await setup.evaluate("""() => [...document.querySelectorAll('.chip .key, .chip .name, .button, .option-label')]
         .filter(el => el.offsetParent && el.scrollWidth > el.clientWidth + 1).map(el => el.textContent)""")
     assert clipped == []
+
+
+async def test_vibration_switch_reaches_the_phone(browser, base, app):
+    setup, phone = await open_setup(browser, base), await open_phone(browser, base)
+    assert await setup.is_checked("#vibrate")
+    await setup.click("#vibrate")
+    await until(lambda: app[server.HUB].haptics is False)
+    assert server.load_state(app[server.STATE_PATH])["haptics"] is False
+    assert not await setup.is_checked("#vibrate")

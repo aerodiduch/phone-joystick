@@ -531,3 +531,14 @@ button { cursor: pointer; }
   opacity: 0.4;
   cursor: default;
 }
+
+.phone-settings { margin-top: 32px !important; }
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}

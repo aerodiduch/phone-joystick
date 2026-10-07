@@ -142,10 +142,21 @@ def test_a_broken_profiles_file_falls_back_to_the_built_in_ones(tmp_path):
 async def test_language_is_saved_and_sent_to_phones(client, paths):
     ws = await client.ws_connect(f"/ws?k={TOKEN}")
     assert (await ws.receive_json())["lang"] == ""
-    resp = await client.post("/api/lang", headers=HEADERS, json={"lang": "pt"})
+    resp = await client.post("/api/settings", headers=HEADERS, json={"lang": "pt"})
     assert resp.status == 200 and (await resp.json())["lang"] == "pt"
     assert (await ws.receive_json())["lang"] == "pt"
     assert server.load_state(paths[0])["lang"] == "pt"
-    assert (await client.post("/api/lang", headers=HEADERS, json={"lang": "fr"})).status == 400
-    assert (await client.post("/api/lang", json={"lang": "es"})).status == 403
+    assert (await client.post("/api/settings", headers=HEADERS, json={"lang": "fr"})).status == 400
+    assert (await client.post("/api/settings", json={"lang": "es"})).status == 403
+    await ws.close()
+
+
+async def test_vibration_can_be_turned_off_for_every_phone(client, paths):
+    ws = await client.ws_connect(f"/ws?k={TOKEN}")
+    assert (await ws.receive_json())["haptics"] is True
+    resp = await client.post("/api/settings", headers=HEADERS, json={"haptics": False})
+    assert (await resp.json())["haptics"] is False
+    assert (await ws.receive_json())["haptics"] is False
+    assert server.load_state(paths[0])["haptics"] is False
+    assert (await client.post("/api/settings", headers=HEADERS, json={"haptics": "no"})).status == 400
     await ws.close()

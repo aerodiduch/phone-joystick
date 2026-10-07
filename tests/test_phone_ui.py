@@ -181,18 +181,18 @@ async def test_playstation_layout(browser, base_url, keyboard):
     await touch(cdp, "touchEnd", {})
     assert await held(keyboard) == set()
 
-    # Football mode: the stick at the edge of its ring also holds R1 (E); arrows never sprints.
+    # Football mode: a little past the ring the stick also holds R1 (E); arrows never sprints.
     await touch(cdp, "touchStart", {1: (sx, sy)})
-    await touch(cdp, "touchMove", {1: (sx + 48, sy)})       # 0.8 of the radius: run
+    await touch(cdp, "touchMove", {1: (sx + 60, sy)})       # at the edge of the ring: run
     assert await held(keyboard) == {"right"}
-    await touch(cdp, "touchMove", {1: (sx + 90, sy)})       # past the edge: sprint
+    await touch(cdp, "touchMove", {1: (sx + 90, sy)})       # past the ring: sprint
     assert await held(keyboard) == {"right", "e"}
     assert await page.locator("#stick-zone.sprint").count() == 1
     assert await page.locator(".shoulder.r1.auto").count() == 1
     assert await page.locator(".shoulder.r1").evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(90, 200, 250)"
-    await touch(cdp, "touchMove", {1: (sx + 54, sy - 4)})   # 0.9: still sprinting (hysteresis)
+    await touch(cdp, "touchMove", {1: (sx + 72, sy - 4)})   # 1.2: still sprinting (hysteresis)
     assert await held(keyboard) == {"right", "e"}
-    await touch(cdp, "touchMove", {1: (sx + 45, sy)})       # 0.75: back to running
+    await touch(cdp, "touchMove", {1: (sx + 60, sy)})       # back at the ring: running
     assert await held(keyboard) == {"right"}
     assert await page.locator("#stick-zone.sprint").count() == 0
     assert await page.locator(".shoulder.r1.auto").count() == 0
@@ -290,3 +290,32 @@ async def test_language_chosen_on_the_computer_reaches_the_phone(browser, base_u
     await choose_layout(page, "PlayStation")
     assert await page.locator('[data-control="select"] .key').text_content() == "Apagar"
     assert await page.locator('[data-control="start"] .key').text_content() == "Espaço"
+
+
+@pytest.mark.parametrize("platform", ["android", "iphone"])
+async def test_tapping_a_button_vibrates_unless_turned_off(browser, base_url, app, platform):
+    ctx = await browser.new_context(viewport={"width": 852, "height": 393}, is_mobile=True, has_touch=True)
+    # Android: navigator.vibrate. iPhone Safari has none, so the page clicks a hidden switch.
+    await ctx.add_init_script("""
+        window.buzzes = 0;
+        if (%s) delete Navigator.prototype.vibrate;
+        else navigator.vibrate = () => { window.buzzes++; return true; };
+    """ % ("true" if platform == "iphone" else "false"))
+    page = await ctx.new_page()
+    await page.goto(base_url)
+    await page.wait_for_function("document.getElementById('status').dataset.state === 'on'")
+    cdp = await ctx.new_cdp_session(page)
+    count = ("window.buzzes" if platform == "android"
+             else "document.querySelector('.haptic input').checked ? 1 : 0")
+
+    ax, ay = await center(page, ".btn.a")
+    await touch(cdp, "touchStart", {1: (ax, ay)})
+    await touch(cdp, "touchEnd", {})
+    assert await page.evaluate(count) == 1
+
+    app[server.HUB].haptics = False
+    await server.broadcast(app)
+    await asyncio.sleep(0.2)
+    await touch(cdp, "touchStart", {1: (ax, ay)})
+    await touch(cdp, "touchEnd", {})
+    assert await page.evaluate(count) == 1

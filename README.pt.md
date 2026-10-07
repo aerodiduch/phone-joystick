@@ -11,7 +11,7 @@ O Phone Joystick transforma o seu celular em um controle para o seu notebook. El
 - iPhone (Safari) e Android (Chrome). Não precisa instalar nada no celular; é só escanear um QR code.
 - Windows e macOS.
 - Analógico com 8 direções, quatro botões, L1, R1, Start e Select. A tecla de cada um é escolhida na [página de configuração](#página-de-configuração), e você pode ter quantos perfis quiser.
-- Modo futebol: quando você leva o analógico até a borda do círculo, o botão de correr também é apertado, assim você corre enquanto o polegar direito passa e chuta.
+- Modo futebol: quando você leva o analógico um pouco além da borda do círculo, o botão de correr também é apertado, assim você corre enquanto o polegar direito passa e chuta.
 - Em espanhol, português e inglês.
 - Vários dedos ao mesmo tempo, e um dedo pode deslizar de um botão para o outro.
 - Se o celular bloquear ou o Wi-Fi cair, todas as teclas são soltas em menos de 1,5 segundo.
@@ -66,8 +66,9 @@ Abra **http://localhost:8777/setup** em um navegador do computador onde o Phone 
 - **Perfis.** Você pode criar, duplicar, renomear e apagar perfis, e escolher qual o celular usa com **Usar no celular**.
 - **Analógico.** Coloque as quatro direções nas setas ou em WASD com um clique, ou clique em cada direção e escolha a tecla como em qualquer outro botão.
 - **Botões.** Aparecem como A B X Y ou como ✕ ○ □ △.
-- **Modo futebol.** No celular é difícil apertar o botão de correr enquanto você move o analógico. Com o modo futebol ligado, quando você leva o analógico até a borda do círculo, o botão de correr é apertado sozinho, e o botão acende no celular enquanto está apertado. Você escolhe qual é o botão de correr.
+- **Modo futebol.** No celular é difícil apertar o botão de correr enquanto você move o analógico. Com o modo futebol ligado, quando você leva o analógico um pouco além da borda do círculo, o botão de correr é apertado sozinho, e o botão acende no celular enquanto está apertado. Você escolhe qual é o botão de correr.
 - **Idioma.** As bandeirinhas de cima trocam entre espanhol, português e inglês, nesta página e no celular.
+- **Vibração.** O celular vibra de leve quando você toca um botão (no iPhone, precisa do iOS 18 ou mais novo). Dá para desligar em **No celular**.
 
 As mudanças são salvas sozinhas e chegam ao celular na hora, mesmo no meio de uma partida e sem reiniciar nada. Se você estiver segurando um botão quando mudar a tecla dele, a tecla antiga é solta e a nova é apertada.
 

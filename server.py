@@ -134,6 +134,7 @@ class Hub:
         self.layout = layout
         self.min_hold = min_hold
         self.lang = ""  # "" follows each device's language
+        self.haptics = True
         self.phones: list[Phone] = []
         self.held: set[str] = set()
         self.down_at: dict[str, float] = {}
@@ -191,6 +192,7 @@ class Hub:
             "style": current.get("style", ""),
             "stickSprint": current.get("stickSprint", ""),
             "lang": self.lang,
+            "haptics": self.haptics,
         }
 
 
@@ -280,7 +282,8 @@ def local_only(request: web.Request, api: bool = True) -> None:
 def profiles_payload(app: web.Application) -> dict:
     hub = app[HUB]
     return {"layouts": hub.layouts, "active": hub.layout, "controls": CONTROLS,
-            "keys": sorted(SUPPORTED_KEYS), "phones": len(hub.phones), "lang": hub.lang}
+            "keys": sorted(SUPPORTED_KEYS), "phones": len(hub.phones), "lang": hub.lang,
+            "haptics": hub.haptics}
 
 
 async def save_profiles(app: web.Application, layouts: dict, active: str) -> None:
@@ -314,18 +317,24 @@ async def put_profiles(request: web.Request) -> web.Response:
     return web.json_response(profiles_payload(request.app))
 
 
-async def set_language(request: web.Request) -> web.Response:
+async def save_settings(request: web.Request) -> web.Response:
+    """Language and vibration: one choice for every phone, kept in state.json."""
     local_only(request)
     try:
-        lang = (await request.json())["lang"]
-    except (ValueError, KeyError, TypeError):
+        data = await request.json()
+        lang, haptics = data.get("lang"), data.get("haptics")
+    except (ValueError, AttributeError):
         raise web.HTTPBadRequest()
-    if lang not in ("", *MESSAGES):
-        raise web.HTTPBadRequest(text=f"unknown language {lang!r}")
-    global TEXT
-    TEXT = MESSAGES[lang or system_language()]
-    request.app[HUB].lang = lang
-    save_state(request.app[STATE_PATH], {**load_state(request.app[STATE_PATH]), "lang": lang})
+    if lang is not None and lang not in ("", *MESSAGES) or haptics is not None and not isinstance(haptics, bool):
+        raise web.HTTPBadRequest(text="lang must be es, pt, en or empty; haptics true or false")
+    hub, state = request.app[HUB], load_state(request.app[STATE_PATH])
+    if lang is not None:
+        global TEXT
+        TEXT = MESSAGES[lang or system_language()]
+        hub.lang = state["lang"] = lang
+    if haptics is not None:
+        hub.haptics = state["haptics"] = haptics
+    save_state(request.app[STATE_PATH], state)
     await broadcast(request.app)
     return web.json_response(profiles_payload(request.app))
 
@@ -371,10 +380,10 @@ async def no_cache(request: web.Request, response: web.StreamResponse) -> None:
 
 def create_app(keyboard, layouts: dict, layout: str, token: str, state_path: Path = STATE_FILE,
                timeout: float = PING_TIMEOUT, min_hold: float = MIN_HOLD,
-               profiles_path: Path = PROFILES_FILE, lang: str = "") -> web.Application:
+               profiles_path: Path = PROFILES_FILE, lang: str = "", haptics: bool = True) -> web.Application:
     app = web.Application()
     app[HUB] = Hub(keyboard, layouts, layout, min_hold)
-    app[HUB].lang = lang
+    app[HUB].lang, app[HUB].haptics = lang, haptics
     app[TOKEN] = token
     app[STATE_PATH] = state_path
     app[PROFILES_PATH] = profiles_path
@@ -385,7 +394,7 @@ def create_app(keyboard, layouts: dict, layout: str, token: str, state_path: Pat
     app.router.add_get("/api/profiles", get_profiles)
     app.router.add_put("/api/profiles", put_profiles)
     app.router.add_post("/api/profiles/reset", reset_profiles)
-    app.router.add_post("/api/lang", set_language)
+    app.router.add_post("/api/settings", save_settings)
     app.router.add_static("/static", STATIC_DIR)
     app.cleanup_ctx.append(watchdog)
     app.on_shutdown.append(on_shutdown)
@@ -513,7 +522,7 @@ def main() -> None:
         save_state(STATE_FILE, state)
     layout = state["layout"] if state.get("layout") in layouts else default
 
-    app = create_app(keyboard, layouts, layout, state["token"], lang=lang)
+    app = create_app(keyboard, layouts, layout, state["token"], lang=lang, haptics=state.get("haptics", True) is not False)
     atexit.register(app[HUB].release_all)
 
     url = f"http://{lan_address()}:{args.port}/?k={state['token']}"
